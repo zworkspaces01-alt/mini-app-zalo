@@ -39,7 +39,16 @@ export const IMAGES: Record<string, string> = {
 };
 
 export function img(key?: string): string | undefined {
-  return key ? IMAGES[key] : undefined;
+  if (!key) return undefined;
+  if (
+    key.startsWith("http://") ||
+    key.startsWith("https://") ||
+    key.startsWith("data:") ||
+    key.startsWith("/")
+  ) {
+    return key;
+  }
+  return IMAGES[key];
 }
 
 export {

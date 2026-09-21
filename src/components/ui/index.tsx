@@ -8,17 +8,12 @@ import {
 } from "react";
 import { useNavigate } from "zmp-ui";
 
+import { useRestaurant } from "@/hooks/use-restaurant";
 import { useTheme } from "@/hooks/use-theme";
 import { useT, useLang } from "@/i18n";
 import { haptic } from "@/services/zalo";
 import { Badge } from "@/types";
 import { vnd } from "@/utils/format";
-import {
-  logoSrc,
-  logoDarkSrc,
-  logoHorizontalSrc,
-  logoHorizontalDarkSrc,
-} from "@/utils/images";
 
 import { IconClose, IconMinus, IconPlus } from "./icons";
 
@@ -439,14 +434,16 @@ export function BrandLogo({
 }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const restaurant = useRestaurant();
+  // Logo do nhà hàng tải lên trong CMS; chưa có thì dùng logo đóng gói sẵn.
   const src =
     variant === "horizontal"
       ? theme === "light"
-        ? logoHorizontalDarkSrc
-        : logoHorizontalSrc
+        ? restaurant.logoWideDark
+        : restaurant.logoWide
       : theme === "light"
-      ? logoDarkSrc
-      : logoSrc;
+      ? restaurant.logoDark
+      : restaurant.logo;
 
   const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
     e.stopPropagation();

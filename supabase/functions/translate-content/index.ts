@@ -85,7 +85,7 @@ const SPECS: Record<string, Spec> = {
   },
   omakase_sets: {
     key: "id",
-    text: ["name", "subtitle", "description"],
+    text: ["name", "subtitle", "description", "badge"],
     list: [],
     context: ["jp"],
     jaFrom: { name: "jp" },
@@ -98,7 +98,56 @@ const SPECS: Record<string, Spec> = {
   },
   restaurant_settings: {
     key: "id",
-    text: ["tagline", "menu_price_note", "cancellation_policy"],
+    // Trùng với hàm băm i18n_src_restaurant_settings (migration 20260921000009).
+    text: [
+      "tagline",
+      "menu_price_note",
+      "cancellation_policy",
+      "hours_text",
+      "hotline_hours",
+      "hotline_note",
+      "location_note",
+      "parking_note",
+      "about_counter_text",
+      "about_wagyu_text",
+      "private_room_note",
+      "butcher_title",
+      "butcher_subtitle",
+      "butcher_intro",
+      "butcher_badge",
+      "butcher_guarantee",
+      "delivery_eta_text",
+    ],
+    list: [],
+    context: [],
+  },
+  banners: {
+    key: "id",
+    text: ["title", "subtitle", "tag", "cta_text"],
+    list: [],
+    context: ["jp_text"],
+  },
+  content_items: {
+    key: "id",
+    text: ["title", "subtitle", "body", "tag"],
+    list: [],
+    context: ["jp", "section"],
+  },
+  loyalty_tiers: {
+    key: "code",
+    text: ["name"],
+    list: ["perks"],
+    context: [],
+  },
+  loyalty_quests: {
+    key: "id",
+    text: ["title", "description"],
+    list: [],
+    context: [],
+  },
+  reward_gifts: {
+    key: "id",
+    text: ["title", "description", "worth_text", "badge"],
     list: [],
     context: [],
   },
@@ -121,7 +170,7 @@ const LANG_NAME: Record<Lang, string> = {
  */
 function systemPrompt(lang: Lang): string {
   return [
-    `You translate the menu of Miyako, a Japanese fine-dining restaurant in Hanoi, from Vietnamese into ${LANG_NAME[lang]}.`,
+    `You translate the menu and mini-app content (menu items, banners, loyalty rewards, notes for guests) of Miyako, a Japanese fine-dining restaurant in Hanoi, from Vietnamese into ${LANG_NAME[lang]}.`,
     "",
     "Rules:",
     "1. Reply with JSON only. No markdown fence, no commentary.",

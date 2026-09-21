@@ -20,6 +20,7 @@ on conflict (id) do nothing;
 alter table public.telegram_settings enable row level security;
 
 -- Chỉ nhân viên/quản lý mới có quyền đọc & chỉnh sửa cấu hình Telegram
+drop policy if exists "Staff manage telegram settings" on public.telegram_settings;
 create policy "Staff manage telegram settings" on public.telegram_settings
   for all using (public.is_staff()) with check (public.is_staff());
 

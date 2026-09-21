@@ -17,7 +17,7 @@ import { haptic } from "@/services/zalo";
 import { addToCartAtom, favoritesAtom } from "@/state/atoms";
 import { Dish, Variant } from "@/types";
 import { vnd } from "@/utils/format";
-import { img } from "@/utils/images";
+import { getDishImage, heroOmakase } from "@/utils/images";
 
 export default function DishSheet({
   dish,
@@ -47,7 +47,7 @@ export default function DishSheet({
   if (!dish) return null;
 
   const unitPrice = variant?.price ?? dish.price ?? 0;
-  const photo = img(dish.image);
+  const photo = getDishImage(dish);
 
   const name = tr.text(dish, "name", dish.name);
   const description = tr.text(dish, "description", dish.description);
@@ -90,18 +90,44 @@ export default function DishSheet({
         </div>
       }
     >
-      {photo && (
+      {/* Ảnh món ăn hiển thị đúng tỉ lệ và kích cỡ gốc đã tải lên, không bị crop mất góc */}
+      <div className="relative mb-4 w-full overflow-hidden rounded-2xl bg-[var(--surface-2)] shadow-sm flex items-center justify-center">
         <img
           src={photo}
           alt={name}
-          className="mb-4 h-44 w-full rounded-xl object-cover"
+          className="w-full h-auto max-h-[60vh] object-contain rounded-2xl block"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = heroOmakase;
+          }}
         />
-      )}
+
+        {dish.badges?.[0] && (
+          <div className="absolute left-3 top-3 z-10">
+            <DishBadge badge={dish.badges[0]} />
+          </div>
+        )}
+
+        <button
+          type="button"
+          aria-label={favorite ? t.dish.unsave : t.dish.save}
+          aria-pressed={favorite}
+          onClick={toggleFavorite}
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md shadow-md transition-transform active:scale-90"
+        >
+          <IconHeart
+            size={16}
+            filled={favorite}
+            className={favorite ? "text-[var(--shu)]" : "text-white"}
+          />
+        </button>
+      </div>
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {dish.jp && (
-            <span className="jp text-[13px] text-[var(--shu)]">{dish.jp}</span>
+            <span className="jp text-[13px] font-medium text-[var(--shu)]">
+              {dish.jp}
+            </span>
           )}
           {dish.romaji && (
             <span className="text-[13px] italic text-[var(--muted)]">
@@ -109,20 +135,14 @@ export default function DishSheet({
             </span>
           )}
         </div>
-        <button
-          aria-label={favorite ? t.dish.unsave : t.dish.save}
-          aria-pressed={favorite}
-          onClick={toggleFavorite}
-          className="-mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-          style={{ color: favorite ? "var(--shu)" : "var(--faint)" }}
-        >
-          <IconHeart size={20} filled={favorite} />
-        </button>
+        <div className="text-[15px] font-bold text-[var(--shu)] tabular-nums">
+          {vnd(unitPrice, lang)}
+        </div>
       </div>
 
-      {!!dish.badges?.length && (
+      {dish.badges && dish.badges.length > 1 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {dish.badges.map((b) => (
+          {dish.badges.slice(1).map((b) => (
             <DishBadge key={b} badge={b} />
           ))}
         </div>

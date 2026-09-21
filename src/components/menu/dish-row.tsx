@@ -6,7 +6,7 @@ import { dishFromPrice } from "@/data/menu";
 import { useT, useTr } from "@/i18n";
 import { addToCartAtom, dishQtyAtom } from "@/state/atoms";
 import { Dish } from "@/types";
-import { img } from "@/utils/images";
+import { getDishImage, heroOmakase } from "@/utils/images";
 
 /**
  * Một dòng món — bố cục mượn từ menu giấy: tên Việt, romaji nghiêng,
@@ -22,7 +22,7 @@ export default function DishRow({
   const addToCart = useSetAtom(addToCartAtom);
   const qtyMap = useAtomValue(dishQtyAtom);
   const qty = qtyMap[dish.id] ?? 0;
-  const thumb = img(dish.image);
+  const thumb = getDishImage(dish);
   const hasVariants = !!dish.variants?.length;
   const t = useT();
   const tr = useTr();
@@ -32,16 +32,17 @@ export default function DishRow({
 
   return (
     <div className="flex items-start gap-3 py-3.5">
-      {thumb && (
-        <button onClick={() => onOpen(dish)} className="shrink-0">
-          <img
-            src={thumb}
-            alt={name}
-            loading="lazy"
-            className="h-[68px] w-[68px] rounded-xl object-cover shadow-sm"
-          />
-        </button>
-      )}
+      <button onClick={() => onOpen(dish)} className="shrink-0">
+        <img
+          src={thumb}
+          alt={name}
+          loading="lazy"
+          className="h-[68px] w-[68px] rounded-xl object-cover shadow-sm"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = heroOmakase;
+          }}
+        />
+      </button>
 
       <button onClick={() => onOpen(dish)} className="min-w-0 flex-1 text-left">
         {dish.jp && (

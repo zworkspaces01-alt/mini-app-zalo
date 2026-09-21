@@ -57,7 +57,7 @@ export function BackHeader({
       ].join(" ")}
     >
       {/* head-safe: chừa góc phải trên cho hai nút mặc định của Zalo. */}
-      <div className="head-safe flex h-14 items-center gap-2">
+      <div className="head-safe flex h-10 items-center gap-2 pb-1">
         <button
           aria-label={t.common.back}
           onClick={() => {
@@ -66,7 +66,7 @@ export function BackHeader({
             else navigate(-1);
           }}
           className={[
-            "-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--washi)] transition-transform active:scale-90",
+            "-ml-1.5 flex h-9 w-9 items-center justify-center rounded-full text-[var(--washi)] transition-transform active:scale-90",
             overlay ? "icon-scrim" : "active:bg-[var(--surface-2)]",
           ].join(" ")}
         >

@@ -5,6 +5,11 @@ export interface TelegramSettings {
   chat_id: string;
   notify_order: boolean;
   notify_reservation: boolean;
+  notify_loyalty: boolean;
+  topic_order: string;
+  topic_reservation: string;
+  topic_omakase: string;
+  topic_loyalty: string;
   is_active: boolean;
   updated_at?: string;
 }
@@ -17,7 +22,19 @@ export async function fetchTelegramSettings(): Promise<TelegramSettings> {
   try {
     const { data, error } = await (supabase.rpc as any)("get_telegram_settings");
     if (!error && data) {
-      return data as unknown as TelegramSettings;
+      return {
+        bot_token: data.bot_token || "",
+        chat_id: data.chat_id || "",
+        notify_order: data.notify_order ?? true,
+        notify_reservation: data.notify_reservation ?? true,
+        notify_loyalty: data.notify_loyalty ?? true,
+        topic_order: data.topic_order || "",
+        topic_reservation: data.topic_reservation || "",
+        topic_omakase: data.topic_omakase || "",
+        topic_loyalty: data.topic_loyalty || "",
+        is_active: data.is_active ?? true,
+        updated_at: data.updated_at,
+      };
     }
   } catch {
     // fallback
@@ -36,6 +53,11 @@ export async function fetchTelegramSettings(): Promise<TelegramSettings> {
       chat_id: "",
       notify_order: true,
       notify_reservation: true,
+      notify_loyalty: true,
+      topic_order: "",
+      topic_reservation: "",
+      topic_omakase: "",
+      topic_loyalty: "",
       is_active: true,
     };
   }
@@ -46,6 +68,11 @@ export async function fetchTelegramSettings(): Promise<TelegramSettings> {
     chat_id: row.chat_id || "",
     notify_order: row.notify_order ?? true,
     notify_reservation: row.notify_reservation ?? true,
+    notify_loyalty: row.notify_loyalty ?? true,
+    topic_order: row.topic_order || "",
+    topic_reservation: row.topic_reservation || "",
+    topic_omakase: row.topic_omakase || "",
+    topic_loyalty: row.topic_loyalty || "",
     is_active: row.is_active ?? true,
     updated_at: row.updated_at,
   };
@@ -62,9 +89,26 @@ export async function saveTelegramSettings(
       p_notify_order: settings.notify_order,
       p_notify_reservation: settings.notify_reservation,
       p_is_active: settings.is_active,
+      p_notify_loyalty: settings.notify_loyalty,
+      p_topic_order: (settings.topic_order || "").trim(),
+      p_topic_reservation: (settings.topic_reservation || "").trim(),
+      p_topic_omakase: (settings.topic_omakase || "").trim(),
+      p_topic_loyalty: (settings.topic_loyalty || "").trim(),
     });
     if (!error && data) {
-      return data as unknown as TelegramSettings;
+      return {
+        bot_token: data.bot_token || "",
+        chat_id: data.chat_id || "",
+        notify_order: data.notify_order ?? true,
+        notify_reservation: data.notify_reservation ?? true,
+        notify_loyalty: data.notify_loyalty ?? true,
+        topic_order: data.topic_order || "",
+        topic_reservation: data.topic_reservation || "",
+        topic_omakase: data.topic_omakase || "",
+        topic_loyalty: data.topic_loyalty || "",
+        is_active: data.is_active ?? true,
+        updated_at: data.updated_at,
+      };
     }
   } catch {
     // fallback
@@ -79,6 +123,11 @@ export async function saveTelegramSettings(
       chat_id: settings.chat_id.trim(),
       notify_order: settings.notify_order,
       notify_reservation: settings.notify_reservation,
+      notify_loyalty: settings.notify_loyalty,
+      topic_order: (settings.topic_order || "").trim(),
+      topic_reservation: (settings.topic_reservation || "").trim(),
+      topic_omakase: (settings.topic_omakase || "").trim(),
+      topic_loyalty: (settings.topic_loyalty || "").trim(),
       is_active: settings.is_active,
       updated_at: new Date().toISOString(),
     })
@@ -92,6 +141,11 @@ export async function saveTelegramSettings(
     chat_id: row.chat_id || "",
     notify_order: row.notify_order ?? true,
     notify_reservation: row.notify_reservation ?? true,
+    notify_loyalty: row.notify_loyalty ?? true,
+    topic_order: row.topic_order || "",
+    topic_reservation: row.topic_reservation || "",
+    topic_omakase: row.topic_omakase || "",
+    topic_loyalty: row.topic_loyalty || "",
     is_active: row.is_active ?? true,
     updated_at: row.updated_at,
   };
@@ -99,7 +153,8 @@ export async function saveTelegramSettings(
 
 export async function testTelegramBot(
   token: string,
-  chatId: string
+  chatId: string,
+  topicId?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!token.trim() || !chatId.trim()) {
     return { success: false, error: "Vui lòng nhập đầy đủ Bot Token và Chat ID" };
@@ -121,6 +176,7 @@ export async function testTelegramBot(
         type: "test",
         bot_token: token.trim(),
         chat_id: chatId.trim(),
+        topic_id: topicId?.trim() || undefined,
       }),
     });
 

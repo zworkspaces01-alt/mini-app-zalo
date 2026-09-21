@@ -26,3 +26,10 @@ export const omakaseByIdAtom = atom<Record<string, OmakaseSet>>((get) =>
 
 /** true khi đã lấy được nội dung mới từ máy chủ ít nhất một lần */
 export const contentLiveAtom = atom(false);
+
+export const bannersAtom = atom((get) => get(contentAtom).banners);
+export const contentItemsAtom = atom((get) => get(contentAtom).items);
+export const openingHoursAtom = atom((get) => get(contentAtom).hours);
+export const loyaltyTiersAtom = atom((get) => get(contentAtom).tiers);
+export const loyaltyQuestsAtom = atom((get) => get(contentAtom).quests);
+export const rewardGiftsAtom = atom((get) => get(contentAtom).gifts);

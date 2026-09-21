@@ -116,8 +116,12 @@ export default function BannerPanel() {
                 image_url: "",
                 cta_text: "Xem ngay",
                 cta_link: "/menu",
+                accent: null,
                 is_active: true,
                 sort_order: banners.length + 1,
+                i18n: {},
+                i18n_hash: null,
+                i18n_src_hash: null,
                 created_at: "",
                 updated_at: "",
               })

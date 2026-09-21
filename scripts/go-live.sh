@@ -12,6 +12,8 @@
 #   SUPABASE_ANON_KEY      Khoá công khai, sẽ nằm trong mã chạy ở máy khách
 #   SUPABASE_SERVICE_KEY   Khoá bí mật, chỉ dùng ở máy này để tạo tài khoản
 #   SEPAY_WEBHOOK_API_KEY  Khoá webhook đặt bên sepay.vn
+#   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+#                          Tuỳ chọn. Thiếu thì ảnh CMS tải lên Supabase Storage
 #   OWNER_EMAIL            Email đăng nhập CMS đầu tiên
 #   OWNER_PASSWORD         Mật khẩu ban đầu, từ 8 ký tự
 #   OWNER_NAME             Họ tên hiển thị
@@ -69,6 +71,15 @@ if [ -n "${SEPAY_WEBHOOK_API_KEY:-}" ]; then
   echo "  đã đặt SEPAY_WEBHOOK_API_KEY"
 else
   echo "  ⚠ Chưa có SEPAY_WEBHOOK_API_KEY — webhash SePay sẽ từ chối mọi lời gọi"
+fi
+npx --yes supabase functions deploy cloudinary-sign --project-ref "$SUPABASE_PROJECT_REF"
+if [ -n "${CLOUDINARY_API_SECRET:-}" ]; then
+  npx --yes supabase secrets set "CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}" \
+    "CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}" "CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET" \
+    --project-ref "$SUPABASE_PROJECT_REF" >/dev/null
+  echo "  đã đặt CLOUDINARY_*"
+else
+  echo "  ⚠ Chưa có CLOUDINARY_* — ảnh CMS sẽ tải lên Supabase Storage"
 fi
 
 echo "▸ 5/6  Tạo tài khoản quản trị đầu tiên"

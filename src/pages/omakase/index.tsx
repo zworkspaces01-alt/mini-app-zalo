@@ -782,10 +782,10 @@ export default function OmakasePage() {
       <header
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-2 shadow-sm transition-colors"
         style={{
-          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px)",
+          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 4px)",
         }}
       >
-        <div className="flex h-9 items-center justify-between gap-2">
+        <div className="flex h-10 items-center justify-between gap-2">
           <BrandLogo
             variant="horizontal"
             className="h-[25px] w-auto object-contain select-none"

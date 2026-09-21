@@ -26,9 +26,11 @@ create index if not exists idx_customer_quests_lookup
 
 alter table public.customer_quests enable row level security;
 
+drop policy if exists "Customers read their quests" on public.customer_quests;
 create policy "Customers read their quests" on public.customer_quests
   for select using (true);
 
+drop policy if exists "Service manage quests" on public.customer_quests;
 create policy "Service manage quests" on public.customer_quests
   for all using (true);
 

@@ -31,6 +31,9 @@ export type Settings = T["restaurant_settings"]["Row"];
 export type Staff = T["staff"]["Row"];
 export type Payment = T["payments"]["Row"];
 export type Seat = T["seats"]["Row"];
+export type ContentItem = T["content_items"]["Row"];
+export type LoyaltyTier = T["loyalty_tiers"]["Row"];
+export type LoyaltyQuest = T["loyalty_quests"]["Row"];
 
 export interface Customer {
   id: string;
@@ -68,8 +71,14 @@ export interface RewardGift {
   points_cost: number;
   badge: string | null;
   image_url: string | null;
+  /** Số tiền trừ vào đơn khi khách dùng mã đổi được — chỉ quà loại voucher. */
+  discount_value: number | null;
+  min_order_value: number;
   is_active: boolean;
   sort_order: number;
+  i18n: unknown;
+  i18n_hash: string | null;
+  i18n_src_hash: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -112,8 +121,13 @@ export interface Banner {
   image_url: string;
   cta_text: string | null;
   cta_link: string | null;
+  /** Màu phủ lên ảnh, dạng #rrggbb. */
+  accent: string | null;
   is_active: boolean;
   sort_order: number;
+  i18n: unknown;
+  i18n_hash: string | null;
+  i18n_src_hash: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,10 +1,10 @@
 /**
  * Supabase Edge Function: Gửi thông báo tức thì qua Telegram Bot
- *
- * Hỗ trợ các sự kiện:
+ * Hỗ trợ phân luồng theo từng Topic (Forum Threads) trong Telegram Supergroup:
  * - test: Kiểm tra cấu hình bot từ Admin CMS
- * - reservation: Khách đặt bàn mới
+ * - reservation: Khách đặt bàn (phân biệt Đặt bàn thường & Đặt bàn Omakase)
  * - order: Khách gọi món tại bàn / mua mang về / giao hàng
+ * - loyalty: Khách tích điểm đơn hàng / đổi quà voucher / hội viên
  */
 
 const CORS = {
@@ -39,7 +39,8 @@ function formatVnd(amount: number): string {
 }
 
 function escapeHtml(str: string): string {
-  return str
+  if (!str) return "";
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -50,6 +51,11 @@ interface TelegramSettings {
   chat_id?: string;
   notify_order?: boolean;
   notify_reservation?: boolean;
+  notify_loyalty?: boolean;
+  topic_order?: string;
+  topic_reservation?: string;
+  topic_omakase?: string;
+  topic_loyalty?: string;
   is_active?: boolean;
 }
 
@@ -58,6 +64,11 @@ async function loadTelegramSettings(): Promise<TelegramSettings> {
   let chatId = Deno.env.get("TELEGRAM_CHAT_ID") || "";
   let notifyOrder = true;
   let notifyReservation = true;
+  let notifyLoyalty = true;
+  let topicOrder = "";
+  let topicReservation = "";
+  let topicOmakase = "";
+  let topicLoyalty = "";
   let isActive = true;
 
   try {
@@ -70,6 +81,11 @@ async function loadTelegramSettings(): Promise<TelegramSettings> {
         if (row.chat_id) chatId = row.chat_id;
         if (typeof row.notify_order === "boolean") notifyOrder = row.notify_order;
         if (typeof row.notify_reservation === "boolean") notifyReservation = row.notify_reservation;
+        if (typeof row.notify_loyalty === "boolean") notifyLoyalty = row.notify_loyalty;
+        if (row.topic_order) topicOrder = String(row.topic_order).trim();
+        if (row.topic_reservation) topicReservation = String(row.topic_reservation).trim();
+        if (row.topic_omakase) topicOmakase = String(row.topic_omakase).trim();
+        if (row.topic_loyalty) topicLoyalty = String(row.topic_loyalty).trim();
         if (typeof row.is_active === "boolean") isActive = row.is_active;
       }
     }
@@ -82,6 +98,11 @@ async function loadTelegramSettings(): Promise<TelegramSettings> {
     chat_id: chatId,
     notify_order: notifyOrder,
     notify_reservation: notifyReservation,
+    notify_loyalty: notifyLoyalty,
+    topic_order: topicOrder,
+    topic_reservation: topicReservation,
+    topic_omakase: topicOmakase,
+    topic_loyalty: topicLoyalty,
     is_active: isActive,
   };
 }
@@ -89,18 +110,30 @@ async function loadTelegramSettings(): Promise<TelegramSettings> {
 async function sendTelegramMessage(
   token: string,
   chatId: string,
-  text: string
+  text: string,
+  threadId?: string | number | null
 ): Promise<{ ok: boolean; description?: string }> {
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const body: Record<string, any> = {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  };
+
+  const parsedThreadId =
+    threadId !== undefined && threadId !== null && String(threadId).trim() !== ""
+      ? parseInt(String(threadId).trim(), 10)
+      : null;
+
+  if (parsedThreadId !== null && !isNaN(parsedThreadId) && parsedThreadId > 0) {
+    body.message_thread_id = parsedThreadId;
+  }
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    }),
+    body: JSON.stringify(body),
   });
   return await res.json();
 }
@@ -121,7 +154,14 @@ Deno.serve(async (req) => {
     return json({ error: "Yêu cầu JSON không hợp lệ" }, 400);
   }
 
-  const { type, data, bot_token: customToken, chat_id: customChatId } = body;
+  const {
+    type,
+    data,
+    bot_token: customToken,
+    chat_id: customChatId,
+    message_thread_id: customThreadId,
+    topic_id: aliasThreadId,
+  } = body;
 
   const settings = await loadTelegramSettings();
   const token = customToken || settings.bot_token;
@@ -142,21 +182,23 @@ Deno.serve(async (req) => {
   }
 
   let messageHtml = "";
+  let targetThreadId: string | number | null = customThreadId ?? aliasThreadId ?? null;
 
   // 1. Gửi thử nghiệm kết nối
   if (type === "test") {
     const now = new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+    const topicDesc = targetThreadId ? ` (Topic ID: <code>${targetThreadId}</code>)` : " (Topic mặc định / General)";
     messageHtml = [
       "🛎 <b>MIYAKO JAPANESE DINING — TEST BOT</b>",
       "━━━━━━━━━━━━━━━━━━",
       "✅ <b>Kết nối thành công!</b>",
-      "Kênh Telegram này đã được cấu hình để nhận thông báo Đặt bàn & Gọi món tự động từ Miyako Zalo Mini App.",
-      `⏰ <b>Thời gian kiểm tra:</b> ${escapeHtml(now)}`,
+      `Kênh Telegram này đã nhận được thông báo kiểm tra tự động${topicDesc}.`,
+      `⏰ <b>Thời gian:</b> ${escapeHtml(now)}`,
       "━━━━━━━━━━━━━━━━━━",
     ].join("\n");
   }
 
-  // 2. Thông báo Đặt bàn mới
+  // 2. Thông báo Đặt bàn mới (Phân luồng: Đặt bàn thường hoặc Đặt bàn Omakase)
   else if (type === "reservation") {
     if (!settings.notify_reservation && !customToken) {
       return json({ success: false, reason: "Thông báo đặt bàn đang tắt" });
@@ -178,15 +220,32 @@ Deno.serve(async (req) => {
       note,
     } = data || {};
 
-    const purposeText =
-      purpose === "omakase" ? "🍣 Tiệc Bếp Trưởng Omakase" : "🥢 Gọi món Ala Carte";
+    const isOmakase = purpose === "omakase" || !!omakase_title;
+
+    // Định tuyến Topic: Ưu tiên topic Omakase nếu là tiệc Omakase, còn lại dùng topic Đặt bàn thường
+    if (!targetThreadId) {
+      if (isOmakase && settings.topic_omakase) {
+        targetThreadId = settings.topic_omakase;
+      } else {
+        targetThreadId = settings.topic_reservation || settings.topic_omakase || null;
+      }
+    }
+
+    const purposeText = isOmakase
+      ? "🍣 <b>Tiệc Bếp Trưởng Omakase</b>"
+      : "🥢 <b>Gọi món Ala Carte / Bàn thường</b>";
+
     const depositText =
       deposit_amount && deposit_amount > 0
         ? `${formatVnd(deposit_amount)} (${deposit_paid ? "✅ Đã thanh toán" : "⏳ Chờ cọc"})`
         : "Không yêu cầu cọc";
 
+    const titlePrefix = isOmakase
+      ? "🍣 <b>MIYAKO — ĐẶT BÀN OMAKASE MỚI!</b>"
+      : "🪑 <b>MIYAKO — ĐẶT BÀN THƯỜNG MỚI!</b>";
+
     messageHtml = [
-      "🍣 <b>MIYAKO — ĐẶT BÀN MỚI!</b>",
+      titlePrefix,
       "━━━━━━━━━━━━━━━━━━",
       `🔖 <b>Mã đặt bàn:</b> <code>#${escapeHtml(code || "RES")}</code>`,
       `👤 <b>Khách hàng:</b> ${escapeHtml(guest_name || "Khách")}`,
@@ -194,7 +253,7 @@ Deno.serve(async (req) => {
       `👥 <b>Số khách:</b> <b>${guests || 1} người</b>`,
       `📅 <b>Thời gian:</b> <b>${escapeHtml(reserved_time || "")}</b> ngày <b>${escapeHtml(reserved_date || "")}</b>`,
       `🍱 <b>Hình thức:</b> ${purposeText}`,
-      omakase_title ? `✨ <b>Set:</b> ${escapeHtml(omakase_title)}` : null,
+      omakase_title ? `✨ <b>Set Menu:</b> ${escapeHtml(omakase_title)}` : null,
       seat_labels && seat_labels.length > 0
         ? `🪑 <b>Ghế quầy bar:</b> ${escapeHtml(Array.isArray(seat_labels) ? seat_labels.join(", ") : seat_labels)}`
         : null,
@@ -202,7 +261,7 @@ Deno.serve(async (req) => {
       dietary ? `⚠️ <b>Kiêng ăn/Dị ứng:</b> ${escapeHtml(dietary)}` : null,
       note ? `📝 <b>Ghi chú:</b> ${escapeHtml(note)}` : null,
       "━━━━━━━━━━━━━━━━━━",
-      "⚡ <i>Vui lòng vào CMS kiểm tra và chuẩn bị đón khách!</i>",
+      "⚡ <i>Vui lòng vào CMS kiểm tra và chuẩn bị đón tiếp quý khách!</i>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -212,6 +271,10 @@ Deno.serve(async (req) => {
   else if (type === "order") {
     if (!settings.notify_order && !customToken) {
       return json({ success: false, reason: "Thông báo đơn hàng đang tắt" });
+    }
+
+    if (!targetThreadId) {
+      targetThreadId = settings.topic_order || null;
     }
 
     const {
@@ -230,7 +293,7 @@ Deno.serve(async (req) => {
     } = data || {};
 
     const modeText =
-      mode === "table"
+      mode === "table" || mode === "dine-in"
         ? `🍽 Tại bàn: <b>Bàn ${escapeHtml(table_id || "Chưa chọn")}</b>`
         : mode === "takeaway"
         ? "🥡 Mua mang về (Takeaway)"
@@ -283,22 +346,93 @@ Deno.serve(async (req) => {
       .join("\n");
   }
 
+  // 4. Thông báo Khách tích điểm & Hội viên & Đổi quà
+  else if (type === "loyalty") {
+    if (!settings.notify_loyalty && !customToken) {
+      return json({ success: false, reason: "Thông báo tích điểm đang tắt" });
+    }
+
+    if (!targetThreadId) {
+      targetThreadId = settings.topic_loyalty || null;
+    }
+
+    const {
+      action, // 'redeem' | 'earn' | 'tier_upgrade'
+      customer_name,
+      customer_phone,
+      tier_name,
+      order_code,
+      points_change,
+      current_points,
+      gift_title,
+      voucher_code,
+      note,
+    } = data || {};
+
+    let actionTitle = "👑 <b>MIYAKO — HOẠT ĐỘNG TÍCH ĐIỂM & HỘI VIÊN</b>";
+    let detailLines: string[] = [];
+
+    if (action === "redeem") {
+      actionTitle = "🎁 <b>MIYAKO — KHÁCH ĐỔI QUÀ / VOUCHER!</b>";
+      detailLines = [
+        `👤 <b>Hội viên:</b> ${escapeHtml(customer_name || "Khách hàng")} (${escapeHtml(tier_name || "Thành viên")})`,
+        customer_phone ? `📞 <b>Điện thoại:</b> <code>${escapeHtml(customer_phone)}</code>` : "",
+        gift_title ? `🎁 <b>Phần quà:</b> <b>${escapeHtml(gift_title)}</b>` : "",
+        voucher_code ? `🎟 <b>Mã voucher:</b> <code>${escapeHtml(voucher_code)}</code>` : "",
+        points_change ? `🔻 <b>Điểm trừ:</b> <b>-${Math.abs(points_change)} điểm</b>` : "",
+        current_points !== undefined ? `💰 <b>Điểm còn lại:</b> <b>${current_points} điểm</b>` : "",
+      ];
+    } else if (action === "earn") {
+      actionTitle = "⭐ <b>MIYAKO — TÍCH ĐIỂM ĐƠN HÀNG THÀNH CÔNG!</b>";
+      detailLines = [
+        `👤 <b>Hội viên:</b> ${escapeHtml(customer_name || "Khách hàng")} (${escapeHtml(tier_name || "Thành viên")})`,
+        customer_phone ? `📞 <b>Điện thoại:</b> <code>${escapeHtml(customer_phone)}</code>` : "",
+        order_code ? `🔖 <b>Đơn hàng:</b> <code>#${escapeHtml(order_code)}</code>` : "",
+        points_change ? `✨ <b>Điểm cộng:</b> <b>+${points_change} điểm</b>` : "",
+        current_points !== undefined ? `💰 <b>Tổng điểm hiện có:</b> <b>${current_points} điểm</b>` : "",
+      ];
+    } else {
+      detailLines = [
+        `👤 <b>Hội viên:</b> ${escapeHtml(customer_name || "Khách hàng")} (${escapeHtml(tier_name || "Thành viên")})`,
+        customer_phone ? `📞 <b>Điện thoại:</b> <code>${escapeHtml(customer_phone)}</code>` : "",
+        note ? `📝 <b>Nội dung:</b> ${escapeHtml(note)}` : "",
+        current_points !== undefined ? `💰 <b>Tổng điểm:</b> <b>${current_points} điểm</b>` : "",
+      ];
+    }
+
+    messageHtml = [
+      actionTitle,
+      "━━━━━━━━━━━━━━━━━━",
+      ...detailLines.filter(Boolean),
+      note && action !== "custom" ? `📝 <b>Ghi chú:</b> ${escapeHtml(note)}` : null,
+      "━━━━━━━━━━━━━━━━━━",
+      "⚡ <i>Hệ thống chăm sóc khách hàng tự động Miyako VIP Club.</i>",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
   else {
-    return json({ error: "Loại thông báo không hợp lệ (hỗ trợ: test, reservation, order)" }, 400);
+    return json({ error: "Loại thông báo không hợp lệ (hỗ trợ: test, reservation, order, loyalty)" }, 400);
   }
 
   try {
-    const tgRes = await sendTelegramMessage(token, chatId, messageHtml);
+    const tgRes = await sendTelegramMessage(token, chatId, messageHtml, targetThreadId);
     if (!tgRes.ok) {
       return json(
         {
           error: `Telegram Bot API báo lỗi: ${tgRes.description || "Không thể gửi tin nhắn"}`,
           details: tgRes,
+          targetThreadId,
         },
         502
       );
     }
-    return json({ success: true, message: "Đã gửi thông báo Telegram thành công" });
+    return json({
+      success: true,
+      message: "Đã gửi thông báo Telegram thành công",
+      topic_id: targetThreadId || "default",
+    });
   } catch (err: any) {
     return json({ error: "Lỗi kết nối tới Telegram API: " + err.message }, 500);
   }

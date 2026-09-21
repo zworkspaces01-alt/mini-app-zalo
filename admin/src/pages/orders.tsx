@@ -208,6 +208,35 @@ export default function OrdersPage() {
         setItems((prev) =>
           (prev ?? []).map((o) => (o.id === data.id ? (data as OrderWithLines) : o))
         );
+
+        // Gửi thông báo tự động vào Topic Tích điểm nếu có điểm thưởng
+        const pointsEarned = (data as any).points_earned;
+        if (pointsEarned && pointsEarned > 0) {
+          const edgeUrl = import.meta.env.VITE_SUPABASE_URL;
+          const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          if (edgeUrl && key) {
+            fetch(`${edgeUrl}/functions/v1/telegram-notify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: key,
+                Authorization: `Bearer ${key}`,
+              },
+              body: JSON.stringify({
+                type: "loyalty",
+                data: {
+                  action: "earn",
+                  customer_name: (data as any).customer_name || "Khách hàng",
+                  customer_phone: (data as any).customer_phone || "",
+                  tier_name: "Thành viên",
+                  order_code: data.code || order.code,
+                  points_change: pointsEarned,
+                  note: `Đơn hàng #${data.code || order.code} hoàn tất thành công`,
+                },
+              }),
+            }).catch((err) => console.warn("Telegram loyalty notify:", err));
+          }
+        }
       }
       return;
     }
@@ -363,8 +392,8 @@ export default function OrdersPage() {
             p_mode: draft.mode,
             p_customer_name: draft.customer_name.trim(),
             p_customer_phone: draft.customer_phone.trim(),
-            p_delivery_address: draft.delivery_address.trim() || null,
-            p_delivery_time: draft.delivery_time.trim() || null,
+            p_delivery_address: draft.delivery_address.trim() || undefined,
+            p_delivery_time: draft.delivery_time.trim() || undefined,
             p_delivery_fee: draft.delivery_fee || 0,
             p_payment_method: draft.payment_method,
             p_note: draft.note.trim() || undefined,

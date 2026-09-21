@@ -253,8 +253,13 @@ export default function RewardsPage() {
                     points_cost: 100,
                     badge: "",
                     image_url: null,
+                    discount_value: null,
+                    min_order_value: 0,
                     is_active: true,
                     sort_order: gifts.length + 1,
+                    i18n: {},
+                    i18n_hash: null,
+                    i18n_src_hash: null,
                     created_at: "",
                     updated_at: "",
                   })

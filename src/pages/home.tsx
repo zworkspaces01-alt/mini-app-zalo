@@ -46,7 +46,6 @@ import {
 import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
 import { useRestaurant } from "@/hooks/use-restaurant";
-import { useScrollSearchBar } from "@/hooks/use-scroll-search-bar";
 import { useLang, useT, useTr } from "@/i18n";
 import { dishFromPrice } from "@/data/menu";
 import { callHotline, chatWithOA, haptic, openMap, scanTableQR } from "@/services/zalo";
@@ -60,6 +59,7 @@ import {
   heroSushi,
   heroWagyu,
   img,
+  getDishImage,
 } from "@/utils/images";
 
 interface LocalizedString {
@@ -268,9 +268,6 @@ export default function HomePage() {
   const [mapsOpen, setMapsOpen] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { searchContainerStyle, inputProps, onScroll } = useScrollSearchBar({
-    activeQuery: searchQuery,
-  });
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
 
@@ -379,17 +376,17 @@ export default function HomePage() {
   }, [dishes, feedTab]);
 
   return (
-    <Screen name="home" pad={false} onScroll={onScroll}>
+    <Screen name="home" pad={false}>
       {/* ─── 1. THANH TÌM KIẾM TMĐT TRÊN CÙNG (STICKY HEADER) ─── */}
       <header
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-1.5 shadow-sm transition-colors"
         style={{
-          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px)",
+          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 4px)",
           overflowAnchor: "none",
         }}
       >
-        {/* Hàng 1: Logo ngang, Quét QR, Giỏ hàng, Đổi ngôn ngữ */}
-        <div className="flex h-9 items-center justify-between gap-2">
+        {/* Hàng 1: Logo ngang, Quét QR, Giỏ hàng, Đổi ngôn ngữ (Ngang hàng với 2 nút Zalo) */}
+        <div className="flex h-10 items-center justify-between gap-2">
           <BrandLogo
             variant="horizontal"
             className="h-[25px] w-auto object-contain select-none"
@@ -427,8 +424,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động (ẩn khi kéo xuống, hiện khi dừng lại) */}
-        <div className="relative" style={searchContainerStyle}>
+        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động */}
+        <div className="relative mt-1.5">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -452,8 +449,6 @@ export default function HomePage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={inputProps.onFocus}
-                  onBlur={inputProps.onBlur}
                   className="relative z-10 w-full bg-transparent text-[13px] text-[var(--washi)] outline-none border-none"
                 />
                 {!searchQuery && (
@@ -526,7 +521,7 @@ export default function HomePage() {
               ) : (
                 <div className="divide-y divide-[var(--line)]">
                   {liveSearchResults.slice(0, 6).map((d) => {
-                    const photo = img(d.image);
+                    const photo = getDishImage(d);
                     const name = tr.text(d, "name", d.name);
                     return (
                       <div
@@ -538,17 +533,14 @@ export default function HomePage() {
                         className="flex items-center justify-between py-2 cursor-pointer active:bg-[var(--surface-2)] rounded-lg px-1.5 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
-                          {photo ? (
-                            <img
-                              src={photo}
-                              alt={name}
-                              className="h-10 w-10 rounded-lg object-cover shrink-0"
-                            />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-2)] shrink-0">
-                              <Icon3DMenu size={22} />
-                            </div>
-                          )}
+                          <img
+                            src={photo}
+                            alt={name}
+                            className="h-10 w-10 rounded-lg object-cover shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = heroOmakase;
+                            }}
+                          />
                           <div className="min-w-0">
                             <div className="truncate text-[12.5px] font-semibold text-[var(--washi)]">
                               {name}
@@ -846,7 +838,7 @@ export default function HomePage() {
 
         <div className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-1">
           {flashDeals.map((d, index) => {
-            const photo = img(d.image);
+            const photo = getDishImage(d);
             const name = tr.text(d, "name", d.name);
             const isFav = favorites.includes(d.id);
             return (
@@ -860,18 +852,15 @@ export default function HomePage() {
               >
                 {/* Ảnh món 1:1 vuông vức + Tag hot */}
                 <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-2)]">
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt={name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center opacity-60">
-                      <Icon3DMenu size={32} />
-                    </div>
-                  )}
+                  <img
+                    src={photo}
+                    alt={name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = heroOmakase;
+                    }}
+                  />
 
                   {/* Tag giảm giá / bán chạy */}
                   <span className="absolute left-1.5 top-1.5 rounded-md bg-[var(--shu)] px-1.5 py-0.5 text-[8.5px] font-bold text-white shadow-sm">

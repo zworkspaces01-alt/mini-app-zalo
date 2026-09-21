@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "@/components/layout";
 import { Spinner } from "@/components/ui";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import ContentPage from "@/pages/content";
 import CustomersPage from "@/pages/customers";
 import DashboardPage from "@/pages/dashboard";
 import FloorPlanPage from "@/pages/floor-plan";
@@ -44,6 +45,7 @@ function Gate() {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="menu" element={<MenuPage />} />
         <Route path="omakase" element={<OmakasePage />} />
+        <Route path="content" element={<ContentPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

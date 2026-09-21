@@ -15,6 +15,11 @@ export const ENTITIES = [
   "omakase_sets",
   "omakase_courses",
   "restaurant_settings",
+  "banners",
+  "content_items",
+  "loyalty_tiers",
+  "loyalty_quests",
+  "reward_gifts",
 ] as const;
 
 export type Entity = (typeof ENTITIES)[number];
@@ -26,6 +31,11 @@ export const ENTITY_LABEL: Record<Entity, string> = {
   omakase_sets: "Suất omakase",
   omakase_courses: "Trình tự món",
   restaurant_settings: "Cấu hình nhà hàng",
+  banners: "Banner",
+  content_items: "Nội dung trang",
+  loyalty_tiers: "Hạng thành viên",
+  loyalty_quests: "Nhiệm vụ tích điểm",
+  reward_gifts: "Quà đổi điểm",
 };
 
 export interface TranslateResult {

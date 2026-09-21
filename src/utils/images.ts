@@ -52,6 +52,103 @@ export function img(key?: string): string | undefined {
   return IMAGES[key];
 }
 
+/**
+ * Lấy ảnh đại diện chất lượng cao cho món ăn.
+ * Ưu tiên:
+ * 1. Ảnh do nhà hàng tải lên qua CMS hoặc URL trực tiếp.
+ * 2. Mã ảnh trong danh mục IMAGES (hero-wagyu, hero-omakase, hero-sushi,...).
+ * 3. Tự động nhận diện theo danh mục (Wagyu, Sushi, Sashimi, Lẩu, Cơm/Mì, Khai vị, Salad...)
+ *    và từ khoá tên món để đảm bảo POPUP và THẺ MÓN luôn có hình ảnh chuẩn Nhật, đẹp mắt.
+ */
+export function getDishImage(dish?: {
+  image?: string;
+  categoryId?: string;
+  name?: string;
+  id?: string;
+} | null): string {
+  if (!dish) return heroOmakase;
+
+  const direct = img(dish.image);
+  if (direct) return direct;
+
+  const cat = dish.categoryId || "";
+  const nameLower = (dish.name || "").toLowerCase();
+  const idLower = (dish.id || "").toLowerCase();
+
+  // 1. Wagyu, Bò & Món nướng than hoa / Butcher
+  if (
+    cat === "wagyu" ||
+    cat === "nuong" ||
+    cat === "butcher" ||
+    nameLower.includes("bò") ||
+    nameLower.includes("wagyu") ||
+    nameLower.includes("steak") ||
+    nameLower.includes("sườn") ||
+    idLower.includes("wagyu") ||
+    idLower.includes("beef")
+  ) {
+    return heroWagyu;
+  }
+
+  // 2. Sushi, Maki & Nigiri cuộn
+  if (
+    cat === "sushi" ||
+    cat === "maki" ||
+    nameLower.includes("sushi") ||
+    nameLower.includes("maki") ||
+    nameLower.includes("cuộn") ||
+    nameLower.includes("nigiri") ||
+    nameLower.includes("gunkan") ||
+    nameLower.includes("tsutsumi")
+  ) {
+    return heroSushi;
+  }
+
+  // 3. Lẩu Shabu Shabu & Sukiyaki
+  if (
+    cat === "lau" ||
+    nameLower.includes("lẩu") ||
+    nameLower.includes("shabu") ||
+    nameLower.includes("sukiyaki") ||
+    nameLower.includes("nabe") ||
+    idLower.includes("hotpot") ||
+    idLower.includes("lau")
+  ) {
+    return heroHotpot;
+  }
+
+  // 4. Cơm Donburi, Mì Udon, Ramen & Món chiên Tempura
+  if (
+    cat === "com" ||
+    cat === "mi" ||
+    cat === "chien" ||
+    nameLower.includes("cơm") ||
+    nameLower.includes("don") ||
+    nameLower.includes("mì") ||
+    nameLower.includes("udon") ||
+    nameLower.includes("ramen") ||
+    nameLower.includes("soba") ||
+    nameLower.includes("tempura") ||
+    nameLower.includes("chiên")
+  ) {
+    return heroDon;
+  }
+
+  // 5. Khai vị, Salad & Tráng miệng
+  if (cat === "salad") {
+    return omakaseTatami;
+  }
+  if (cat === "trang-mieng") {
+    return omakaseCounterMood;
+  }
+  if (cat === "khai-vi") {
+    return omakaseChefPrep;
+  }
+
+  // 6. Mặc định là Sashimi tươi sống chuẩn Omakase
+  return heroOmakase;
+}
+
 export {
   logo as logoSrc,
   logoDark as logoDarkSrc,

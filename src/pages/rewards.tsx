@@ -22,6 +22,7 @@ import {
 import { Screen } from "@/components/ui/screen";
 import { useLang, useT } from "@/i18n";
 import { haptic, scanTableQR } from "@/services/zalo";
+import { notifyTelegram } from "@/services/telegram";
 import {
   MembershipTier,
   PointsHistoryItem,
@@ -511,6 +512,22 @@ export default function RewardsPage() {
         "MYK-" + Math.random().toString(36).substring(2, 7).toUpperCase();
       setRedeemedCode(randomCode);
       setRedeemSuccess(true);
+
+      // Gửi thông báo Telegram tức thì vào Topic Khách tích điểm / Đổi thưởng
+      notifyTelegram({
+        type: "loyalty",
+        data: {
+          action: "redeem",
+          customer_name: user?.name || "Khách hàng Zalo",
+          customer_phone: user?.phone || "",
+          tier_name: tierInfo.name,
+          gift_title: selectedGift.title,
+          voucher_code: randomCode,
+          points_change: selectedGift.pointsCost,
+          current_points: Math.max(0, points - selectedGift.pointsCost),
+          note: `Khách đổi quà ${selectedGift.title} trên Zalo Mini App`,
+        },
+      }).catch((err) => console.warn("Telegram loyalty error:", err));
     }
   };
 
@@ -554,10 +571,10 @@ export default function RewardsPage() {
       <header
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-2 shadow-sm transition-colors"
         style={{
-          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px)",
+          paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 4px)",
         }}
       >
-        <div className="flex h-9 items-center justify-between gap-2">
+        <div className="flex h-10 items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <button
               aria-label={t.common.back}

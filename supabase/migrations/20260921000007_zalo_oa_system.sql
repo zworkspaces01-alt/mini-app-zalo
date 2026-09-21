@@ -28,6 +28,7 @@ on conflict (id) do nothing;
 alter table public.zalo_oa_settings enable row level security;
 
 -- Chỉ nhân viên / quản lý được xem và chỉnh sửa cấu hình Zalo OA
+drop policy if exists "Staff manage zalo oa settings" on public.zalo_oa_settings;
 create policy "Staff manage zalo oa settings" on public.zalo_oa_settings
   for all using (public.is_staff()) with check (public.is_staff());
 
@@ -50,9 +51,11 @@ create index if not exists zalo_logs_phone_idx on public.zalo_notification_logs 
 
 alter table public.zalo_notification_logs enable row level security;
 
+drop policy if exists "Staff read zalo notification logs" on public.zalo_notification_logs;
 create policy "Staff read zalo notification logs" on public.zalo_notification_logs
   for select using (public.is_staff());
 
+drop policy if exists "Server insert zalo notification logs" on public.zalo_notification_logs;
 create policy "Server insert zalo notification logs" on public.zalo_notification_logs
   for insert with check (true);
 

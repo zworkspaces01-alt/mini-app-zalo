@@ -1,15 +1,17 @@
 /**
- * Gửi thông báo sự kiện (Đặt bàn, Gọi món) đến Telegram Bot qua Supabase Edge Function.
+ * Gửi thông báo sự kiện (Đặt bàn, Gọi món, Tích điểm) đến Telegram Bot qua Supabase Edge Function.
  */
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export interface TelegramNotifyPayload {
-  type: "reservation" | "order" | "test";
+  type: "reservation" | "order" | "loyalty" | "test";
   data?: any;
   bot_token?: string;
   chat_id?: string;
+  topic_id?: string | number;
+  message_thread_id?: string | number;
 }
 
 export async function notifyTelegram(
@@ -36,7 +38,7 @@ export async function notifyTelegram(
     }
     return { success: true };
   } catch (err: any) {
-    // Không làm gián đoạn luồng đặt bàn/đặt món chính nếu Telegram lỗi mạng
+    // Không làm gián đoạn luồng người dùng nếu Telegram lỗi mạng
     console.warn("notifyTelegram:", err);
     return { success: false, error: err.message };
   }

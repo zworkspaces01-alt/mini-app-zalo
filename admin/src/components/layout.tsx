@@ -16,6 +16,7 @@ import {
   IconMenuBars,
   IconOmakase,
   IconSettings,
+  IconTag,
   IconUsers,
   IconWallet,
 } from "./icons";
@@ -53,6 +54,7 @@ const NAV_GROUPS: { group: string; items: NavItem[] }[] = [
     items: [
       { to: "/menu", label: "Thực đơn 149 món", Icon: IconBook },
       { to: "/omakase", label: "Omakase", Icon: IconOmakase },
+      { to: "/content", label: "Nội dung app", Icon: IconTag },
       { to: "/reports", label: "Báo cáo doanh thu", Icon: IconChart },
       { to: "/settings", label: "Cấu hình", Icon: IconSettings },
     ],

@@ -57,6 +57,8 @@ export interface Dish extends Translatable {
   image?: string;
   /** Trang menu giấy gốc — để đối chiếu khi cập nhật giá */
   sourcePage: string;
+  /** Nhãn lọc do CMS đặt, ví dụ ["wagyu"] — khớp với tab của Butcher. */
+  tags?: string[];
 }
 
 export interface Category extends Translatable {
@@ -93,6 +95,10 @@ export interface OmakaseSet extends Translatable {
   /** true khi thực đơn chi tiết chưa được xác nhận */
   menuPending: boolean;
   image?: string;
+  /** Nhãn nhỏ trên thẻ suất, ví dụ "Được chọn nhiều nhất". */
+  badge?: string;
+  /** Suất được chọn sẵn khi mở trang Omakase. */
+  featured?: boolean;
 }
 
 export interface CartLine {
@@ -186,10 +192,100 @@ export interface UserProfile {
   phone?: string;
 }
 
+/* ─────────────── Nội dung trang do CMS quản lý ─────────────── */
+
+/**
+ * Các khối nội dung dạng danh sách — bảng `content_items`. Mỗi section dùng
+ * một phần các trường; ý nghĩa từng trường ghi ở `src/data/page-content.ts`.
+ */
+export type ContentSection =
+  | "home_search"
+  | "menu_search"
+  | "butcher_search"
+  | "home_tab"
+  | "home_promo"
+  | "home_highlight"
+  | "home_offer"
+  | "omakase_step"
+  | "omakase_gallery"
+  | "about_spec"
+  | "butcher_tab"
+  | "butcher_cut"
+  | "butcher_promise";
+
+export interface ContentItem extends Translatable {
+  id: string;
+  section: ContentSection;
+  /** Mã máy: tên biểu tượng, mã lọc, loại ảnh. Không dịch. */
+  key?: string;
+  title: string;
+  subtitle?: string;
+  body?: string;
+  tag?: string;
+  /** Chữ Nhật hoặc romaji in sẵn. Không dịch. */
+  jp?: string;
+  image?: string;
+  link?: string;
+  meta: Record<string, unknown>;
+}
+
+export type BannerPlacement = "home_hero" | "omakase_hero" | "butcher_hero" | "popup";
+
+export interface Banner extends Translatable {
+  id: string;
+  placement: BannerPlacement;
+  title: string;
+  subtitle?: string;
+  tag?: string;
+  jp?: string;
+  image: string;
+  ctaText?: string;
+  /** Trang mở khi bấm, ví dụ "/omakase" hoặc "/butcher?tab=wagyu". */
+  ctaLink?: string;
+  /** Màu phủ lên ảnh, dạng #rrggbb. */
+  accent?: string;
+}
+
+/** Một ca trong bảng `opening_hours` — khung giờ nhận khách. */
+export interface OpeningShift {
+  /** 0 = Chủ nhật … 6 = Thứ bảy */
+  weekday: number;
+  service: ServiceSlot;
+  /** "HH:mm" */
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
 /* ─────────────── Tích Điểm & Hội Viên ─────────────── */
 export type MembershipTier = "bronze" | "silver" | "gold" | "diamond";
 
-export interface RewardGiftItem {
+/** Hạng thành viên — bảng `loyalty_tiers`, nhà hàng sửa trong CMS. */
+export interface LoyaltyTier extends Translatable {
+  code: MembershipTier;
+  name: string;
+  minPoints: number;
+  /** Tỷ lệ tích điểm, 0.08 = 8% */
+  earnRate: number;
+  /** Màu nhấn của thẻ, dạng #rrggbb */
+  color?: string;
+  perks: string[];
+}
+
+/**
+ * Nhiệm vụ nhận điểm — bảng `loyalty_quests`. Mã nhiệm vụ cố định vì mỗi
+ * mã gắn với một hành động trong app (điểm danh, quét QR…); nhà hàng sửa
+ * tên, mô tả, số điểm và bật tắt.
+ */
+export interface LoyaltyQuest extends Translatable {
+  id: "daily_checkin" | "table_qr" | "review" | "share" | string;
+  title: string;
+  description?: string;
+  points: number;
+  icon?: string;
+}
+
+export interface RewardGiftItem extends Translatable {
   id: string;
   category: "all" | "voucher" | "dish" | "drink";
   title: string;
@@ -199,6 +295,9 @@ export interface RewardGiftItem {
   badge?: string;
   imageUrl?: string;
   isActive?: boolean;
+  /** Số tiền trừ vào đơn khi dùng mã đổi được. Chỉ có ở quà loại voucher. */
+  discountValue?: number;
+  minOrderValue?: number;
 }
 
 export interface CustomerVoucher {
@@ -208,6 +307,9 @@ export interface CustomerVoucher {
   giftTitle: string;
   giftCategory: string;
   worthText?: string;
+  /** Số tiền trừ vào đơn; không có = quà nhận tại quán. */
+  discountValue?: number;
+  minOrderValue?: number;
   status: "active" | "used" | "expired";
   createdAt: string;
   usedAt?: string;

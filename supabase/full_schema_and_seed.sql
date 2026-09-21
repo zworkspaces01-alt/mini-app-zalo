@@ -2560,6 +2560,11 @@ alter table public.orders add constraint orders_target_present check (
 );
 
 -- 7. Cập nhật hàm RPC create_order hỗ trợ đầy đủ tham số
+-- Bỏ bản 6 tham số cũ. Để cả hai cùng tồn tại thì lời gọi chỉ truyền các tham
+-- số cũ (mini app bản cũ) khớp cả hai bản, PostgREST không chọn được hàm nào
+-- và báo lỗi PGRST203. Còn một bản thì tham số mới lấy giá trị mặc định.
+drop function if exists public.create_order(jsonb, text, text, uuid, text, text);
+
 create or replace function public.create_order(
   p_lines            jsonb,
   p_mode             text,
@@ -2702,6 +2707,10 @@ end;
 $$;
 
 -- 8. Hàm tra cứu đơn hàng theo mã (dùng cho cả OD và BT)
+-- Kiểu trả về đổi từ public.orders sang jsonb. `create or replace` không đổi
+-- được kiểu trả về, nên phải xoá bản cũ trước.
+drop function if exists public.get_order_by_code(text);
+
 create or replace function public.get_order_by_code(p_code text)
 returns jsonb
 language plpgsql

@@ -155,8 +155,15 @@ export async function share(input: {
   }
 }
 
-export async function openMap(query: string) {
-  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+/**
+ * Mở bản đồ. Nhà hàng đã dán link Google Maps trong CMS thì mở đúng link đó
+ * (ghim đúng quán); chưa có thì tìm theo địa chỉ.
+ */
+export async function openMap(query: string, mapsUrl?: string | null) {
+  const url =
+    mapsUrl && /^https?:\/\//i.test(mapsUrl.trim())
+      ? mapsUrl.trim()
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   if (inZalo()) {
     try {
       await openOutApp({ url });

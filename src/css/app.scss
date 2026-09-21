@@ -265,8 +265,8 @@ html.theme-dark .bottom-nav {
   position: sticky;
   top: 0;
   z-index: 30;
-  /* Thụt xuống thêm 26px để cách xa hoàn toàn đồng hồ và notch tai thỏ */
-  padding-top: calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px);
+  /* Căn ngang hàng chuẩn với 2 nút mặc định của Zalo (··· ✕) */
+  padding-top: calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 4px);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }

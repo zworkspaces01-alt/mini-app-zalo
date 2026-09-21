@@ -9,7 +9,7 @@ import { useT, useTr } from "@/i18n";
 import { haptic } from "@/services/zalo";
 import { addToCartAtom, dishQtyAtom, favoritesAtom } from "@/state/atoms";
 import { Dish } from "@/types";
-import { img } from "@/utils/images";
+import { getDishImage, heroOmakase } from "@/utils/images";
 
 export interface DishCardProps {
   dish: Dish;
@@ -33,7 +33,7 @@ export default function DishCard({
   const tr = useTr();
 
   const name = tr.text(dish, "name", dish.name);
-  const photo = img(dish.image);
+  const photo = getDishImage(dish);
   const badge = dish.badges?.[0];
   const hasVariants = !!dish.variants?.length;
 
@@ -72,18 +72,15 @@ export default function DishCard({
             aspectRatio === "4:5" ? "aspect-[4/5]" : "aspect-square"
           }`}
         >
-          {photo ? (
-            <img
-              src={photo}
-              alt={name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center opacity-60">
-              <Icon3DMenu size={36} />
-            </div>
-          )}
+          <img
+            src={photo}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = heroOmakase;
+            }}
+          />
 
           {/* Huy hiệu món */}
           {badge && (

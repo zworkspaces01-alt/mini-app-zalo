@@ -227,6 +227,7 @@ admin/                    CMS cho nhà hàng
 supabase/
   migrations/             Lược đồ, RLS, các hàm RPC, cột đa ngữ
   functions/
+    cloudinary-sign/      Ký lượt tải ảnh lên Cloudinary, giữ API secret ở máy chủ
     sepay-webhook/        Nhận báo có của SePay
     staff-admin/          Tạo/xoá tài khoản nhân viên
     translate-content/    Dịch thực đơn sang Anh/Nhật bằng Groq hoặc Gemini

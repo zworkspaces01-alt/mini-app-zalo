@@ -29,6 +29,7 @@ import {
 import LanguagePanel from "@/components/language-panel";
 import BannerPanel from "@/components/banner-panel";
 import TelegramPanel from "@/components/telegram-panel";
+import ZaloOAPanel from "@/components/zalo-oa-panel";
 import {
   TranslationEditor,
   fromI18nDraft,
@@ -45,6 +46,7 @@ type Tab =
   | "seats"
   | "banners"
   | "telegram"
+  | "zalo_oa"
   | "staff"
   | "language";
 
@@ -56,6 +58,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "seats", label: "Ghế quầy" },
   { key: "banners", label: "Banner & Media" },
   { key: "telegram", label: "Telegram Bot" },
+  { key: "zalo_oa", label: "Zalo OA & ZNS" },
   { key: "staff", label: "Nhân sự" },
   { key: "language", label: "Ngôn ngữ" },
 ];
@@ -1347,6 +1350,9 @@ export default function SettingsPage() {
 
       {/* ── Thông Báo Telegram Bot ── */}
       {tab === "telegram" && <TelegramPanel />}
+
+      {/* ── Thông Báo Zalo OA & ZNS ── */}
+      {tab === "zalo_oa" && <ZaloOAPanel />}
 
       <Modal
         open={!!tableDraft}

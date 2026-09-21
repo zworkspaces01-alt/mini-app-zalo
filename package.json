@@ -19,6 +19,7 @@
     "start": "zmp start",
     "deploy": "zmp deploy",
     "typecheck": "tsc --noEmit",
+    "build": "vite build --config vite.check.mts",
     "build:check": "vite build --config vite.check.mts",
     "preview:check": "vite --config vite.check.mts --port 5199"
   },

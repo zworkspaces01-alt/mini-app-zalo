@@ -10,6 +10,7 @@
 import { COUNTER_SEATS } from "@/data/seats";
 import { supabase } from "@/services/supabase";
 import { notifyTelegram } from "@/services/telegram";
+import { notifyCustomerZalo } from "@/services/zalo-notify";
 import {
   BookingDraft,
   CartLine,
@@ -281,6 +282,26 @@ export async function createReservation(
     },
   }).catch((err) => console.warn("Telegram notification error:", err));
 
+  // Gửi tin nhắn Zalo OA / ZNS cho khách hàng
+  notifyCustomerZalo({
+    type: "reservation",
+    phone: reservation.phone,
+    zalo_id: zaloId,
+    data: {
+      code: reservation.code,
+      guest_name: reservation.name,
+      guest_phone: reservation.phone,
+      guests: reservation.guests,
+      reserved_date: reservation.date,
+      reserved_time: reservation.time,
+      purpose: reservation.purpose,
+      omakase_title: draft.omakaseSetId,
+      seat_labels: draft.seatIds,
+      deposit_amount: reservation.depositAmount,
+      zalo_id: zaloId,
+    },
+  }).catch((err) => console.warn("Zalo notification error:", err));
+
   return reservation;
 }
 
@@ -388,6 +409,23 @@ export async function createOrder(input: {
       note: order.note,
     },
   }).catch((err) => console.warn("Telegram notification error:", err));
+
+  // Gửi tin nhắn Zalo OA / ZNS cho khách hàng
+  notifyCustomerZalo({
+    type: "order",
+    phone: order.customerPhone,
+    zalo_id: input.zaloId,
+    data: {
+      code: order.code,
+      mode: order.mode,
+      table_id: order.tableId,
+      customer_name: order.customerName,
+      customer_phone: order.customerPhone,
+      subtotal: order.subtotal,
+      delivery_fee: order.deliveryFee,
+      zalo_id: input.zaloId,
+    },
+  }).catch((err) => console.warn("Zalo notification error:", err));
 
   return order;
 }

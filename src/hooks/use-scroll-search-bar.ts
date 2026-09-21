@@ -3,69 +3,74 @@ import { useState, useEffect, useRef, useCallback } from "react";
 interface UseScrollSearchBarOptions {
   /** Khoảng cách từ đỉnh trang (px) mà thanh search luôn luôn hiển thị */
   topThreshold?: number;
-  /** Độ dịch chuyển cuộn tối thiểu (px) để kích hoạt ẩn/hiện */
+  /** Độ dịch chuyển cuộn tích luỹ tối thiểu (px) để kích hoạt ẩn/hiện */
   deltaThreshold?: number;
   /** Thời gian dừng cuộn (ms) để tự động hiện lại thanh tìm kiếm */
   idleDelay?: number;
-  /** Từ khoá tìm kiếm đang có trong ô search (nếu có thì không ẩn) */
+  /** Từ khoá tìm kiếm (giữ tương thích tham số, không chặn ẩn khi cuộn) */
   activeQuery?: string;
+  /** Giữ thanh search hiển thị khi có từ khoá (mặc định: false để luôn ẩn khi kéo xuống) */
+  keepVisibleWhenQuery?: boolean;
 }
 
 /**
  * Hook điều khiển ẩn thanh tìm kiếm khi người dùng cuộn/kéo xuống,
- * và tự động hiện lại khi người dùng dừng cuộn hoặc cuộn ngược lên trên.
+ * và tự động hiện lại khi người dùng dừng lại hoặc cuộn ngược lên trên.
+ * Áp dụng thống nhất cho mọi nơi có thanh search trong Mini App.
  */
 export function useScrollSearchBar({
-  topThreshold = 35,
-  deltaThreshold = 6,
-  idleDelay = 260,
+  topThreshold = 25,
+  deltaThreshold = 8,
+  idleDelay = 280,
   activeQuery = "",
+  keepVisibleWhenQuery = false,
 }: UseScrollSearchBarOptions = {}) {
   const [isScrollVisible, setIsScrollVisible] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
   const lastScrollY = useRef(0);
+  const accumulatedDelta = useRef(0);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Tìm scrollTop của container đang cuộn
+  // Tìm vị trí scrollTop thực tế của container đang cuộn (ZMP Page / zaui-page / window)
   const getScrollPosition = useCallback((target: EventTarget | null): number | null => {
-    // 1. Nếu sự kiện đến từ Window hoặc Document
-    if (
-      target === window ||
-      target === document ||
-      target === document.documentElement ||
-      target === document.body
-    ) {
-      return (
-        window.scrollY ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop ||
-        0
-      );
-    }
-
-    // 2. Nếu target là HTMLElement, kiểm tra xem có cuộn dọc không
+    // 1. Nếu target là HTMLElement có cuộn dọc (như .zaui-page)
     if (target instanceof HTMLElement) {
-      // Bỏ qua các container chỉ cuộn ngang (như danh mục món, banner)
       if (target.scrollHeight > target.clientHeight + 10) {
         return target.scrollTop;
       }
     }
 
-    // 3. Fallback: kiểm tra .zaui-page hoặc .page-scroll nếu target chưa rõ
-    const zauiPage = document.querySelector(".zaui-page");
+    // 2. Kiểm tra phần tử .zaui-page hoặc .page-scroll chuẩn của ZMP
+    const zauiPage = document.querySelector(".zaui-page") as HTMLElement | null;
     if (zauiPage && zauiPage.scrollHeight > zauiPage.clientHeight + 10) {
       return zauiPage.scrollTop;
     }
 
-    return null;
+    const pageScroll = document.querySelector(".page-scroll") as HTMLElement | null;
+    if (pageScroll && pageScroll.scrollHeight > pageScroll.clientHeight + 10) {
+      return pageScroll.scrollTop;
+    }
+
+    // 3. Fallback cho Window / Document
+    return (
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
   }, []);
 
   const handleScroll = useCallback(
-    (e: Event) => {
-      const currentScrollY = getScrollPosition(e.target);
-      if (currentScrollY === null) return;
+    (e?: Event | React.UIEvent<HTMLElement>) => {
+      // Khi đang focus gõ phím vào input, không ẩn thanh search
+      if (isFocused) {
+        setIsScrollVisible(true);
+        return;
+      }
 
-      const delta = currentScrollY - lastScrollY.current;
+      const target = (e as any)?.nativeEvent?.target ?? (e as any)?.target ?? null;
+      const currentScrollY = getScrollPosition(target);
+      if (currentScrollY === null) return;
 
       // Xoá timer phát hiện dừng cuộn trước đó
       if (idleTimer.current) {
@@ -76,22 +81,45 @@ export function useScrollSearchBar({
       // Ở gần đỉnh trang: luôn luôn hiển thị
       if (currentScrollY <= topThreshold) {
         setIsScrollVisible(true);
-      } else if (delta > deltaThreshold) {
-        // Kéo/cuộn xuống (scrolling down) -> ẩn thanh search
-        setIsScrollVisible(false);
-      } else if (delta < -deltaThreshold) {
-        // Cuộn ngược lên trên (scrolling up) -> hiện lại thanh search ngay
-        setIsScrollVisible(true);
+        lastScrollY.current = Math.max(0, currentScrollY);
+        accumulatedDelta.current = 0;
+        return;
       }
 
-      lastScrollY.current = Math.max(0, currentScrollY);
+      const diff = currentScrollY - lastScrollY.current;
+      lastScrollY.current = currentScrollY;
 
-      // Khi người dùng dừng lại (không phát sinh scroll sau idleDelay ms) -> hiện lại
+      // Bỏ qua nếu không có dịch chuyển
+      if (diff === 0) return;
+
+      // Reset tích luỹ nếu người dùng đổi chiều cuộn
+      if (
+        (diff > 0 && accumulatedDelta.current < 0) ||
+        (diff < 0 && accumulatedDelta.current > 0)
+      ) {
+        accumulatedDelta.current = 0;
+      }
+
+      accumulatedDelta.current += diff;
+
+      // Kéo/cuộn xuống (scrolling down) đủ ngưỡng -> ẩn thanh search
+      if (accumulatedDelta.current >= deltaThreshold) {
+        setIsScrollVisible(false);
+        accumulatedDelta.current = 0;
+      }
+      // Cuộn ngược lên trên (scrolling up) đủ ngưỡng -> hiện lại thanh search ngay
+      else if (accumulatedDelta.current <= -deltaThreshold) {
+        setIsScrollVisible(true);
+        accumulatedDelta.current = 0;
+      }
+
+      // Khi người dùng dừng lại (không phát sinh scroll sau idleDelay ms) -> tự động hiện lại
       idleTimer.current = setTimeout(() => {
         setIsScrollVisible(true);
+        accumulatedDelta.current = 0;
       }, idleDelay);
     },
-    [getScrollPosition, topThreshold, deltaThreshold, idleDelay]
+    [getScrollPosition, isFocused, topThreshold, deltaThreshold, idleDelay]
   );
 
   const handleScrollEnd = useCallback(() => {
@@ -100,10 +128,15 @@ export function useScrollSearchBar({
       idleTimer.current = null;
     }
     setIsScrollVisible(true);
+    accumulatedDelta.current = 0;
   }, []);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, {
+    const onScrollCapture = (e: Event) => {
+      handleScroll(e);
+    };
+
+    window.addEventListener("scroll", onScrollCapture, {
       capture: true,
       passive: true,
     });
@@ -113,7 +146,7 @@ export function useScrollSearchBar({
     });
 
     return () => {
-      window.removeEventListener("scroll", handleScroll, { capture: true });
+      window.removeEventListener("scroll", onScrollCapture, { capture: true });
       window.removeEventListener("scrollend", handleScrollEnd, {
         capture: true,
       });
@@ -121,16 +154,18 @@ export function useScrollSearchBar({
     };
   }, [handleScroll, handleScrollEnd]);
 
-  // Giữ thanh search hiển thị nếu người dùng đang focus hoặc đang có chuỗi tìm kiếm
+  // Thanh search hiển thị khi: đang ở trạng thái hiện, hoặc input đang focus, hoặc tuỳ chọn keepVisibleWhenQuery
   const isSearchVisible =
-    isScrollVisible || isFocused || Boolean(activeQuery?.trim());
+    isScrollVisible ||
+    isFocused ||
+    (keepVisibleWhenQuery ? Boolean(activeQuery?.trim()) : false);
 
   const onFocus = useCallback(() => setIsFocused(true), []);
   const onBlur = useCallback(() => setIsFocused(false), []);
 
   const onScroll = useCallback(
     (e: React.UIEvent<HTMLElement>) => {
-      handleScroll(e.nativeEvent);
+      handleScroll(e);
     },
     [handleScroll]
   );
@@ -144,16 +179,17 @@ export function useScrollSearchBar({
       onFocus,
       onBlur,
     },
-    // Style tiện ích sẵn cho container của thanh search
+    // Style hiệu ứng mượt mà chuẩn TMĐT cho container của thanh search
     searchContainerStyle: {
-      maxHeight: isSearchVisible ? "52px" : "0px",
+      maxHeight: isSearchVisible ? "48px" : "0px",
       marginTop: isSearchVisible ? "6px" : "0px",
       opacity: isSearchVisible ? 1 : 0,
       transform: isSearchVisible ? "translateY(0)" : "translateY(-6px)",
       overflow: isSearchVisible ? ("visible" as const) : ("hidden" as const),
       pointerEvents: isSearchVisible ? ("auto" as const) : ("none" as const),
       transition:
-        "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, transform 0.26s ease, margin-top 0.28s ease",
+        "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, transform 0.26s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+      willChange: "max-height, opacity, transform",
     },
   };
 }

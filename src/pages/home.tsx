@@ -9,7 +9,9 @@ import { BrandLogo, Price, Sheet } from "@/components/ui";
 import {
   IconCart,
   IconChat,
+  IconCheck,
   IconChevronRight,
+  IconClipboard,
   IconClose,
   IconHeart,
   IconPhone,
@@ -262,6 +264,9 @@ export default function HomePage() {
   const [feedTab, setFeedTab] = useState<FeedTab>("all");
   const [openDish, setOpenDish] = useState<Dish | null>(null);
   const [voucherOpen, setVoucherOpen] = useState(false);
+  const [hotlineOpen, setHotlineOpen] = useState(false);
+  const [mapsOpen, setMapsOpen] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { searchContainerStyle, inputProps, onScroll } = useScrollSearchBar({
     activeQuery: searchQuery,
@@ -763,7 +768,7 @@ export default function HomePage() {
             <button
               onClick={() => {
                 haptic("light");
-                callHotline(restaurant.hotline);
+                setHotlineOpen(true);
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
@@ -779,7 +784,7 @@ export default function HomePage() {
             <button
               onClick={() => {
                 haptic("light");
-                openMap(`Miyako ${restaurant.address}`);
+                setMapsOpen(true);
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
@@ -1068,14 +1073,20 @@ export default function HomePage() {
         {/* Thông tin hỗ trợ */}
         <div className="mt-2.5 flex items-center justify-center gap-3 text-[11.5px] text-[var(--muted)]">
           <button
-            onClick={() => callHotline(restaurant.hotline)}
+            onClick={() => {
+              haptic("light");
+              setHotlineOpen(true);
+            }}
             className="flex items-center gap-1 hover:text-[var(--washi)] transition-colors"
           >
             <Icon3DHotline size={15} /> {restaurant.hotline}
           </button>
           <span>·</span>
           <button
-            onClick={() => openMap(`Miyako ${restaurant.address}`)}
+            onClick={() => {
+              haptic("light");
+              setMapsOpen(true);
+            }}
             className="flex items-center gap-1 hover:text-[var(--washi)] transition-colors"
           >
             <Icon3DMapPin size={15} /> {lang === "ja" ? "地図・アクセス" : lang === "en" ? "Map & Directions" : "Bản đồ chỉ đường"}
@@ -1174,6 +1185,227 @@ export default function HomePage() {
               className="rounded-full bg-[var(--shu)] px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform"
             >
               {lang === "ja" ? "今すぐ使う" : lang === "en" ? "Use now" : "Dùng ngay"}
+            </button>
+          </div>
+        </div>
+      </Sheet>
+
+      {/* Sheet Hotline Hỗ Trợ & Đặt Bàn */}
+      <Sheet
+        open={hotlineOpen}
+        onClose={() => setHotlineOpen(false)}
+        title={
+          lang === "ja"
+            ? "お問い合わせ・ご予約"
+            : lang === "en"
+            ? "Hotline & Reservations"
+            : "Hotline Hỗ Trợ & Đặt Bàn"
+        }
+      >
+        <div className="flex flex-col items-center text-center pb-3 pt-1">
+          <div className="relative mb-3 flex h-16 w-16 items-center justify-center">
+            <Icon3DHotline size={58} />
+            <span className="absolute bottom-0 right-0 flex h-3.5 w-3.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[var(--surface)]" />
+            </span>
+          </div>
+
+          <div className="text-[12.5px] font-semibold text-[var(--muted)] uppercase tracking-wider">
+            {restaurant.name} · {restaurant.tagline}
+          </div>
+          <div className="mt-1 text-[26px] font-bold tracking-tight text-[var(--washi)] font-mono">
+            {restaurant.hotline}
+          </div>
+
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11.5px] font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            {lang === "ja"
+              ? "電話受付中 (10:00 - 22:30)"
+              : lang === "en"
+              ? "Available Now (10:00 - 22:30)"
+              : "Sẵn sàng nhận cuộc gọi (10:00 - 22:30)"}
+          </div>
+
+          <p className="mt-3 px-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
+            {lang === "ja"
+              ? "おまかせコースのご相談、VIP個室の優先予約、テイクアウト注文を承ります。"
+              : lang === "en"
+              ? "Contact our reception directly for Omakase consultation, VIP room reservations, or express delivery."
+              : "Liên hệ trực tiếp lễ tân để được hỗ trợ đặt bàn Omakase, giữ phòng riêng Tatami VIP hoặc giải đáp mọi thắc mắc."}
+          </p>
+
+          <div className="mt-5 flex w-full flex-col gap-2.5">
+            <a
+              href={`tel:${restaurant.hotline}`}
+              onClick={() => {
+                haptic("medium");
+                callHotline(restaurant.hotline);
+              }}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--shu)] font-bold text-white shadow-md active:scale-[0.98] transition-transform text-[14.5px]"
+            >
+              <IconPhone size={18} />
+              {lang === "ja"
+                ? `今すぐ電話する (${restaurant.hotline})`
+                : lang === "en"
+                ? `Call Now (${restaurant.hotline})`
+                : `Gọi Ngay (${restaurant.hotline})`}
+            </a>
+
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <button
+                onClick={() => {
+                  haptic("light");
+                  if (restaurant.hotline) {
+                    navigator.clipboard?.writeText(restaurant.hotline);
+                  }
+                  setCopiedKey("hotline");
+                  setTimeout(() => setCopiedKey(null), 2000);
+                }}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--line-strong)] bg-[var(--surface-2)] text-[13px] font-semibold text-[var(--washi)] active:scale-[0.98] transition-all"
+              >
+                {copiedKey === "hotline" ? (
+                  <>
+                    <IconCheck size={16} className="text-emerald-500" />
+                    <span className="text-emerald-500 font-bold">
+                      {lang === "ja" ? "コピー完了" : lang === "en" ? "Copied!" : "Đã chép số!"}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <IconClipboard size={16} />
+                    {lang === "ja" ? "番号をコピー" : lang === "en" ? "Copy Number" : "Sao chép số"}
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  haptic("light");
+                  chatWithOA(restaurant.oaId);
+                }}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--line-strong)] bg-[var(--surface-2)] text-[13px] font-semibold text-[var(--washi)] active:scale-[0.98] transition-all"
+              >
+                <IconChat size={16} className="text-blue-500" />
+                {lang === "ja" ? "Zalo OA チャット" : lang === "en" ? "Chat Zalo OA" : "Nhắn Zalo OA"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Sheet>
+
+      {/* Sheet Bản Đồ & Chỉ Đường */}
+      <Sheet
+        open={mapsOpen}
+        onClose={() => setMapsOpen(false)}
+        title={
+          lang === "ja"
+            ? "店舗アクセス・地図"
+            : lang === "en"
+            ? "Location & Directions"
+            : "Vị Trí & Chỉ Đường"
+        }
+      >
+        <div className="flex flex-col items-center pb-3 pt-1">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center">
+            <Icon3DMapPin size={58} />
+          </div>
+
+          <div className="text-[12.5px] font-semibold text-[var(--muted)] uppercase tracking-wider">
+            {restaurant.name} Japanese Dining
+          </div>
+          <div className="mt-1 text-center text-[16px] font-bold text-[var(--washi)] px-2">
+            {restaurant.address}
+          </div>
+
+          <div className="mt-3.5 w-full space-y-2.5 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3 text-[12px] text-left">
+            <div className="flex items-start gap-2.5">
+              <span className="text-base leading-none">📍</span>
+              <div>
+                <span className="font-semibold text-[var(--washi)]">
+                  {lang === "ja" ? "位置" : lang === "en" ? "Location" : "Vị trí"}:
+                </span>{" "}
+                <span className="text-[var(--muted)]">
+                  {lang === "ja"
+                    ? "ダオタン日本食街、ロッテセンターハノイより徒歩約3分 (~300m)。"
+                    : lang === "en"
+                    ? "Dao Tan culinary street, ~300m from Lotte Center Hanoi."
+                    : "Phố ẩm thực Đào Tấn, cách ngã tư Liễu Giai & Lotte Center ~300m."}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base leading-none">🚗</span>
+              <div>
+                <span className="font-semibold text-[var(--washi)]">
+                  {lang === "ja" ? "駐車場" : lang === "en" ? "Parking" : "Đỗ xe"}:
+                </span>{" "}
+                <span className="text-[var(--muted)]">
+                  {lang === "ja"
+                    ? "専属警備員が自動車・バイクの駐車をご案内いたします。"
+                    : lang === "en"
+                    ? "Valet security staff available for both cars and motorbikes."
+                    : "Có nhân viên bảo vệ hỗ trợ hướng dẫn đỗ xe ô tô và xe máy tận nơi."}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base leading-none">🕒</span>
+              <div>
+                <span className="font-semibold text-[var(--washi)]">
+                  {lang === "ja" ? "営業時間" : lang === "en" ? "Hours" : "Giờ đón khách"}:
+                </span>{" "}
+                <span className="text-[var(--muted)]">
+                  {lang === "ja"
+                    ? "昼 10:30 - 14:00 · 夜 17:30 - 22:30"
+                    : lang === "en"
+                    ? "Lunch 10:30 - 14:00 · Dinner 17:30 - 22:30"
+                    : "Trưa 10:30 - 14:00 · Tối 17:30 - 22:30"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex w-full flex-col gap-2.5">
+            <button
+              onClick={() => {
+                haptic("medium");
+                openMap(`Miyako ${restaurant.address}`);
+              }}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--shu)] font-bold text-white shadow-md active:scale-[0.98] transition-transform text-[14.5px]"
+            >
+              <IconPin size={18} />
+              {lang === "ja"
+                ? "Googleマップで道案内"
+                : lang === "en"
+                ? "Open in Google Maps"
+                : "Mở Google Maps Chỉ Đường"}
+            </button>
+
+            <button
+              onClick={() => {
+                haptic("light");
+                if (restaurant.address) {
+                  navigator.clipboard?.writeText(restaurant.address);
+                }
+                setCopiedKey("address");
+                setTimeout(() => setCopiedKey(null), 2000);
+              }}
+              className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--line-strong)] bg-[var(--surface-2)] text-[13px] font-semibold text-[var(--washi)] active:scale-[0.98] transition-all"
+            >
+              {copiedKey === "address" ? (
+                <>
+                  <IconCheck size={16} className="text-emerald-500" />
+                  <span className="text-emerald-500 font-bold">
+                    {lang === "ja" ? "住所をコピーしました" : lang === "en" ? "Address Copied!" : "Đã sao chép địa chỉ!"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <IconClipboard size={16} />
+                  {lang === "ja" ? "住所をコピー" : lang === "en" ? "Copy Address" : "Sao chép địa chỉ nhà hàng"}
+                </>
+              )}
             </button>
           </div>
         </div>

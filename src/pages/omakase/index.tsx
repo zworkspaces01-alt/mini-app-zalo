@@ -6,6 +6,7 @@ import { BrandLogo, Note } from "@/components/ui";
 import {
   IconCart,
   IconCheck,
+  IconChevronLeft,
   IconChevronRight,
   IconClose,
   IconQR,
@@ -205,6 +206,206 @@ function PinterestCard({
   );
 }
 
+/* ─── Trình xem Thư viện ảnh Gallery Lightbox toàn màn hình ─── */
+function OmakaseLightboxGallery({
+  items,
+  currentIndex,
+  onClose,
+  onSelectIndex,
+  onBook,
+}: {
+  items: PinterestItem[];
+  currentIndex: number;
+  onClose: () => void;
+  onSelectIndex: (index: number) => void;
+  onBook: (item: PinterestItem) => void;
+}) {
+  const current = items[currentIndex] || items[0];
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  const goPrev = () => {
+    haptic("light");
+    onSelectIndex((currentIndex - 1 + items.length) % items.length);
+  };
+
+  const goNext = () => {
+    haptic("light");
+    onSelectIndex((currentIndex + 1) % items.length);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentIndex, items.length]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col justify-between bg-black/95 backdrop-blur-2xl animate-fade-in select-none"
+      onClick={onClose}
+    >
+      {/* 1. Header: Loại ảnh + Chỉ số ảnh + Nút đóng */}
+      <div
+        className="flex items-center justify-between px-4 pt-3 pb-2 z-20 shrink-0"
+        onClick={(e) => e.stopPropagation()}
+        style={{ paddingTop: "calc(var(--sat, 0px) + 12px)" }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white border border-white/15 shadow-sm">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                current.type === "space" ? "bg-[var(--gold)]" : "bg-[var(--shu)]"
+              }`}
+            />
+            <span>
+              {current.type === "space" ? "Không gian Omakase" : "Món ăn nghệ thuật"}
+            </span>
+          </div>
+
+          {current.seating && (
+            <span className="rounded-full bg-[var(--gold)]/20 border border-[var(--gold)]/40 px-2.5 py-0.5 text-[10px] font-bold text-[var(--gold)]">
+              {current.seating === "counter" ? "Quầy Bar 12 Ghế" : "Phòng VIP Tatami"}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <div className="font-mono text-[11.5px] font-bold tracking-widest text-[var(--gold)] bg-white/10 px-2.5 py-1 rounded-full border border-white/15">
+            {currentIndex + 1} / {items.length}
+          </div>
+
+          <button
+            type="button"
+            aria-label="Đóng Gallery"
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md border border-white/20 active:scale-90 transition-all hover:bg-white/25"
+          >
+            <IconClose size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Main Stage: Ảnh kích thước lớn + Mũi tên điều hướng + Vuốt cảm ứng */}
+      <div
+        className="relative flex-1 flex items-center justify-center px-2 min-h-0 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+        onTouchEnd={(e) => {
+          if (touchStartX === null) return;
+          const diff = e.changedTouches[0].clientX - touchStartX;
+          if (diff > 40) goPrev();
+          else if (diff < -40) goNext();
+          setTouchStartX(null);
+        }}
+      >
+        {/* Nút Prev */}
+        <button
+          type="button"
+          aria-label="Ảnh trước"
+          onClick={goPrev}
+          className="absolute left-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xl transition-all active:scale-90 hover:bg-black/80 hover:text-white"
+        >
+          <IconChevronLeft size={22} />
+        </button>
+
+        {/* Khung ảnh chính */}
+        <div className="relative max-h-[56vh] w-full flex items-center justify-center px-8">
+          <img
+            key={current.id}
+            src={current.image}
+            alt={current.title}
+            className="max-h-[56vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-white/10 transition-all duration-300"
+          />
+        </div>
+
+        {/* Nút Next */}
+        <button
+          type="button"
+          aria-label="Ảnh tiếp theo"
+          onClick={goNext}
+          className="absolute right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xl transition-all active:scale-90 hover:bg-black/80 hover:text-white"
+        >
+          <IconChevronRight size={22} />
+        </button>
+      </div>
+
+      {/* 3. Bottom Panel: Thông tin + Thumbnail Carousel + Nút đặt bàn */}
+      <div
+        className="bg-gradient-to-t from-black via-zinc-950/95 to-transparent px-4 pt-3 pb-5 border-t border-white/10 z-20 shrink-0"
+        onClick={(e) => e.stopPropagation()}
+        style={{ paddingBottom: "calc(var(--sab, 0px) + 14px)" }}
+      >
+        <div className="max-w-md mx-auto space-y-2.5">
+          {/* Thông tin ảnh */}
+          <div>
+            <div className="jp text-[10.5px] tracking-widest text-[var(--gold)] font-medium">
+              {current.jp}
+            </div>
+            <h3 className="font-display text-[15px] font-bold text-white mt-0.5 leading-snug">
+              {current.title}
+            </h3>
+            <p className="text-[11.5px] leading-relaxed text-zinc-300 mt-0.5 line-clamp-2">
+              {current.desc}
+            </p>
+          </div>
+
+          {/* Dải hình ảnh thu nhỏ (Thumbnail Strip) */}
+          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
+            {items.map((it, idx) => {
+              const isActive = idx === currentIndex;
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  onClick={() => {
+                    haptic("light");
+                    onSelectIndex(idx);
+                  }}
+                  className={`relative h-11 w-11 shrink-0 overflow-hidden rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "border-2 border-[var(--gold)] ring-2 ring-[var(--gold)]/40 scale-105 shadow-md"
+                      : "opacity-45 hover:opacity-80 border border-white/20"
+                  }`}
+                >
+                  <img
+                    src={it.image}
+                    alt={it.title}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Nút đặt bàn tương ứng với ảnh */}
+          <div className="pt-1 flex items-center justify-between gap-3">
+            <span className="text-[10.5px] text-zinc-400">
+              Vuốt sang trái/phải để duyệt ảnh
+            </span>
+
+            <button
+              type="button"
+              onClick={() => onBook(current)}
+              className="flex items-center gap-1.5 rounded-full bg-[var(--shu)] px-4 py-2 text-[12px] font-bold text-white shadow-lg shadow-[var(--shu)]/30 active:scale-95 transition-all hover:brightness-110 shrink-0"
+            >
+              <span>
+                {current.type === "space"
+                  ? "Đặt Giữ Chỗ Này"
+                  : "Đặt Bàn Trải Nghiệm"}
+              </span>
+              <IconChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OmakasePage() {
   const navigate = useNavigate();
   const sets = useAtomValue(omakaseSetsAtom);
@@ -226,8 +427,8 @@ export default function OmakasePage() {
   // Bộ lọc Gallery Pinterest (Tất cả / Không gian Omakase / Món ăn tại quầy)
   const [galleryFilter, setGalleryFilter] = useState<"all" | "space" | "dish">("all");
 
-  // Lightbox xem ảnh Pinterest toàn màn hình
-  const [previewPin, setPreviewPin] = useState<PinterestItem | null>(null);
+  // Trình xem Thư viện ảnh Gallery Lightbox toàn màn hình
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   // Phân chia items vào 2 cột zic-zac phong cách Pinterest Masonry
   const filteredPins = useMemo(() => {
@@ -641,7 +842,8 @@ export default function OmakasePage() {
                     pin={pin}
                     onOpen={() => {
                       haptic("light");
-                      setPreviewPin(pin);
+                      const idx = filteredPins.findIndex((p) => p.id === pin.id);
+                      setGalleryIndex(idx !== -1 ? idx : 0);
                     }}
                   />
                 ))}
@@ -655,7 +857,8 @@ export default function OmakasePage() {
                     pin={pin}
                     onOpen={() => {
                       haptic("light");
-                      setPreviewPin(pin);
+                      const idx = filteredPins.findIndex((p) => p.id === pin.id);
+                      setGalleryIndex(idx !== -1 ? idx : 0);
                     }}
                   />
                 ))}
@@ -744,82 +947,18 @@ export default function OmakasePage() {
         </div>
       </div>
 
-      {/* ─── 9. MODAL PHÓNG TO ẢNH PINTEREST (LIGHTBOX SHOWROOM) ─── */}
-      {previewPin && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-fade-in"
-          onClick={() => setPreviewPin(null)}
-        >
-          <div
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/20 bg-zinc-950 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Nút đóng */}
-            <button
-              aria-label="Đóng"
-              onClick={() => setPreviewPin(null)}
-              className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur-md border border-white/20 active:scale-95 transition-all"
-            >
-              <IconClose size={18} />
-            </button>
-
-            {/* Ảnh full size */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-black">
-              <img
-                src={previewPin.image}
-                alt={previewPin.title}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 px-3 py-1 text-[11px] font-bold text-[var(--gold)]">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    previewPin.type === "space" ? "bg-[var(--gold)]" : "bg-[var(--shu)]"
-                  }`}
-                />
-                <span>{previewPin.tag}</span>
-              </div>
-            </div>
-
-            {/* Thông tin chi tiết */}
-            <div className="p-4 space-y-3">
-              <div>
-                <div className="jp text-[11px] tracking-widest text-[var(--gold)]">
-                  {previewPin.jp}
-                </div>
-                <h3 className="font-display text-[18px] font-bold text-white mt-0.5">
-                  {previewPin.title}
-                </h3>
-                <p className="text-[12.5px] leading-relaxed text-zinc-300 mt-1">
-                  {previewPin.desc}
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-white/10">
-                <button
-                  onClick={() => setPreviewPin(null)}
-                  className="rounded-full px-4 py-2 text-[12px] font-medium text-zinc-400 hover:text-white"
-                >
-                  Đóng
-                </button>
-                <button
-                  onClick={() => {
-                    const chosen = previewPin;
-                    setPreviewPin(null);
-                    handleBookNow(currentSet, chosen.seating || "counter");
-                  }}
-                  className="flex items-center gap-1 rounded-full bg-[var(--shu)] px-5 py-2.5 text-[12.5px] font-bold text-white shadow-md active:scale-95"
-                >
-                  <span>
-                    {previewPin.type === "space"
-                      ? "Đặt giữ chỗ không gian này"
-                      : "Đặt bàn thưởng thức ngay"}
-                  </span>
-                  <IconChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* ─── 9. GALLERY LIGHTBOX TOÀN MÀN HÌNH (OMAKASE SHOWROOM) ─── */}
+      {galleryIndex !== null && filteredPins[galleryIndex] && (
+        <OmakaseLightboxGallery
+          items={filteredPins}
+          currentIndex={galleryIndex}
+          onClose={() => setGalleryIndex(null)}
+          onSelectIndex={(idx) => setGalleryIndex(idx)}
+          onBook={(item) => {
+            setGalleryIndex(null);
+            handleBookNow(currentSet, item.seating || "counter");
+          }}
+        />
       )}
     </Screen>
   );

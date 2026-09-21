@@ -19,7 +19,6 @@ import {
   Icon3DSushi,
   Icon3DVoucher,
 } from "@/components/ui/icons-3d";
-import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
 import { useLang, useT } from "@/i18n";
 import { haptic, scanTableQR } from "@/services/zalo";
@@ -334,16 +333,7 @@ export default function RewardsPage() {
             />
           </div>
 
-          <div className="flex items-center gap-1.5 head-safe">
-            <button
-              onClick={() => setQrSheetOpen(true)}
-              className="flex items-center gap-1 h-8 rounded-full bg-[var(--surface-2)] px-2.5 text-[11px] font-medium text-[var(--washi)] border border-[var(--line)] active:scale-95 transition-transform"
-            >
-              <IconQR size={15} className="text-[var(--gold)]" />
-              <span>Mã Quầy</span>
-            </button>
-            <LangButton />
-          </div>
+          <div className="head-safe" />
         </div>
 
         {/* 4 Tabs chính của trang Tích Điểm */}

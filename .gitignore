@@ -1,0 +1,58 @@
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.*
+admin/.env
+admin/.env.*
+!.env.example
+
+# Admin app build & dependencies
+admin/node_modules/
+admin/dist/
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Production build
+www/
+
+# Bản build kiểm tra ngoài zmp CLI
+dist-check/
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+supabase/functions/.env
+
+# Bí mật khi lên môi trường thật
+scripts/.env.production

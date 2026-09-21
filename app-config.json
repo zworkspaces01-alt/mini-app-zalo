@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "Miyako",
+    "headerColor": "#0b0b0c",
+    "textColor": {
+      "light": "white",
+      "dark": "white"
+    },
+    "statusBarColor": "#0b0b0c",
+    "statusBar": "transparent",
+    "actionBarHidden": true,
+    "hideIOSSafeAreaBottom": true,
+    "hideAndroidBottomNavigationBar": false
+  },
+  "listCSS": [],
+  "listSyncJS": [],
+  "listAsyncJS": []
+}

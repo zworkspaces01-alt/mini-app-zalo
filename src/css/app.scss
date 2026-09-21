@@ -1,0 +1,424 @@
+/* ============================================================
+   MIYAKO — Design tokens
+   Tối, tiết chế, một điểm nhấn đỏ (shu) lấy từ logo và con dấu
+   trên menu giấy. Vàng dùng riêng cho omakase và các set nướng.
+   ============================================================ */
+
+:root,
+html.theme-dark,
+[data-theme="dark"] {
+  /* Nền Dark Mode (Mực Sumi) */
+  --sumi:        #0b0b0c;  /* mực — nền app */
+  --surface:     #141416;  /* thẻ */
+  --surface-2:   #1b1b1e;  /* thẻ nổi, input */
+  --surface-3:   #232327;
+
+  /* Chữ Dark Mode */
+  --washi:       #f3f1ec;  /* giấy washi — chữ chính */
+  --muted:       #9c978d;  /* chữ phụ */
+  --faint:       #6b6862;
+
+  /* Nhấn */
+  --shu:         #e2231a;  /* đỏ chu sa — logo, con dấu */
+  --shu-dim:     rgba(226, 35, 26, 0.14);
+  --gold:        #c9a96a;  /* vàng — omakase, combo */
+  --gold-dim:    rgba(201, 169, 106, 0.14);
+  --gold-contrast: #1a1509;
+  --jade:        #5f9e7a;
+  --jade-dim:    rgba(95, 158, 122, 0.16);
+
+  --line:        rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --hero-fade-mid: rgba(11, 11, 12, 0.75);
+  --hero-fade-top: rgba(11, 11, 12, 0.35);
+  --glass-bg:      rgba(20, 20, 22, 0.85);
+  --scrim-bg:      rgba(11, 11, 12, 0.55);
+
+  --radius:      14px;
+  --radius-lg:   20px;
+
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Vùng an toàn */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+
+  --zbtn-w: 88px;
+  --zbtn-h: 40px;
+  --zbtn-gap: 10px;
+  --zbtn-pr: calc(var(--zbtn-w) + var(--zbtn-gap));
+  --safe-top: calc(var(--sat) + var(--zbtn-h));
+
+  --nav-h: 60px;
+}
+
+/* Light theme: Mỹ học Washi & Giấy gạo ấm áp truyền thống Nhật Bản */
+@media (prefers-color-scheme: light) {
+  :root:not(.theme-dark):not([data-theme="dark"]) {
+    --sumi:        #f7f6f1;  /* nền app tông washi ấm áp, êm mắt */
+    --surface:     #ffffff;  /* thẻ trắng tinh sạch */
+    --surface-2:   #eeece5;  /* thẻ nổi, input, chip */
+    --surface-3:   #e2ded6;
+
+    --washi:       #171615;  /* chữ chính đậm nét, dễ đọc */
+    --muted:       #565249;  /* chữ phụ thanh lịch, rõ ràng */
+    --faint:       #807a6f;
+
+    --shu:         #d42118;  /* đỏ chu sa truyền thống */
+    --shu-dim:     rgba(212, 33, 24, 0.09);
+    --gold:        #99732e;  /* vàng trầm sang trọng, độ tương phản cao */
+    --gold-dim:    rgba(153, 115, 46, 0.1);
+    --gold-contrast: #ffffff;
+    --jade:        #2d7850;
+    --jade-dim:    rgba(45, 120, 80, 0.12);
+
+    --line:        rgba(0, 0, 0, 0.08);
+    --line-strong: rgba(0, 0, 0, 0.16);
+
+    --hero-fade-mid: rgba(247, 246, 241, 0.88);
+    --hero-fade-top: rgba(247, 246, 241, 0.25);
+    --glass-bg:      rgba(255, 255, 255, 0.88);
+    --scrim-bg:      rgba(255, 255, 255, 0.65);
+  }
+}
+
+html.theme-light,
+[data-theme="light"] {
+  --sumi:        #f7f6f1;
+  --surface:     #ffffff;
+  --surface-2:   #eeece5;
+  --surface-3:   #e2ded6;
+
+  --washi:       #171615;
+  --muted:       #565249;
+  --faint:       #807a6f;
+
+  --shu:         #d42118;
+  --shu-dim:     rgba(212, 33, 24, 0.09);
+  --gold:        #99732e;
+  --gold-dim:    rgba(153, 115, 46, 0.1);
+  --gold-contrast: #ffffff;
+  --jade:        #2d7850;
+  --jade-dim:    rgba(45, 120, 80, 0.12);
+
+  --line:        rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.16);
+
+  --hero-fade-mid: rgba(247, 246, 241, 0.88);
+  --hero-fade-top: rgba(247, 246, 241, 0.25);
+  --glass-bg:      rgba(255, 255, 255, 0.88);
+  --scrim-bg:      rgba(255, 255, 255, 0.65);
+}
+
+html,
+body,
+#app {
+  background: var(--sumi);
+  color: var(--washi);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+/* ZaUI ghi đè: app này chỉ chạy tông tối */
+.zaui-page,
+.zaui-app {
+  background: var(--sumi);
+  color: var(--washi);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Kiểu chữ ---------- */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.tracking-brand {
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.jp {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP",
+    var(--font-display), sans-serif;
+}
+
+/* ---------- Trang ---------- */
+.page-scroll {
+  min-height: 100%;
+  padding-bottom: calc(var(--nav-h) + var(--sab) + 16px);
+}
+
+.page-pad {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Hàng ngang tầm cụm nút mặc định Zalo (chừa khoảng phải cho nút ••• ✕) */
+.zalo-nav-row {
+  height: var(--zbtn-h);
+  padding-right: var(--zbtn-pr);
+  display: flex;
+  align-items: center;
+}
+
+.head-safe {
+  padding-right: var(--zbtn-pr);
+}
+
+/* Trang không có header: đẩy nội dung xuống dưới hai nút đó. */
+.pad-safe-top {
+  padding-top: calc(var(--safe-top) + 16px);
+}
+
+/* ---------- Đường kẻ mảnh kiểu menu giấy ---------- */
+.rule {
+  height: 1px;
+  background: var(--line);
+}
+
+.rule-dotted {
+  flex: 1;
+  border-bottom: 1px dotted var(--line-strong);
+  margin: 0 8px 5px;
+}
+
+/* ---------- Thẻ ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* ---------- Con dấu 都 ---------- */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--shu);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  padding-bottom: 1px;
+}
+
+/* ---------- Thanh điều hướng dưới ---------- */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  height: calc(var(--nav-h) + var(--sab));
+  padding-bottom: var(--sab);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 20px -2px rgba(0, 0, 0, 0.06);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--line-strong) 25%,
+      var(--shu) 50%,
+      var(--line-strong) 75%,
+      transparent 100%
+    );
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+[data-theme="dark"] .bottom-nav,
+html.theme-dark .bottom-nav {
+  box-shadow: 0 -6px 28px -4px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- Header dính ---------- */
+.sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  /* Thụt xuống thêm 26px để cách xa hoàn toàn đồng hồ và notch tai thỏ */
+  padding-top: calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.sticky-head--overlay {
+  position: absolute;
+  background: transparent;
+  border-bottom: 0;
+}
+
+/* Nền mờ tròn cho nút quay lại khi nằm trên ảnh sáng */
+.icon-scrim {
+  background: var(--scrim-bg);
+}
+
+/* ---------- Thanh giỏ nổi ---------- */
+.cart-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--nav-h) + var(--sab) + 22px);
+  z-index: 35;
+}
+
+/* ---------- Ẩn scrollbar cho hàng chip ---------- */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Skeleton ---------- */
+@keyframes shimmer {
+  0%   { opacity: 0.45; }
+  50%  { opacity: 0.8; }
+  100% { opacity: 0.45; }
+}
+.skeleton {
+  background: var(--surface-2);
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ---------- Hiện dần ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.rise {
+  animation: rise 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .skeleton { animation: none; }
+}
+
+/* ---------- Bottom sheet ---------- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(2px);
+}
+.sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  /* Trần 88vh cho WebView cũ; bản tính được thì chặn thêm ở mép dưới hai
+     nút Zalo, để tiêu đề và nút đóng của sheet không chui xuống dưới chúng. */
+  max-height: 88vh;
+  max-height: min(88vh, calc(100vh - var(--safe-top) - 12px));
+  overflow-y: auto;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  border-top: 1px solid var(--line-strong);
+  padding-bottom: calc(var(--sab) + 12px);
+}
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: none; }
+}
+.sheet-panel { animation: sheet-in 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel { animation: none; }
+}
+
+/* ---------- Ảnh hero phủ gradient ---------- */
+.hero-fade::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--sumi) 2%,
+    var(--hero-fade-mid) 35%,
+    transparent 72%,
+    var(--hero-fade-top) 100%
+  );
+}
+
+.card .hero-fade::after {
+  background: linear-gradient(
+    to top,
+    var(--surface) 2%,
+    var(--surface) 20%,
+    transparent 72%,
+    transparent 100%
+  );
+}
+
+/* ---------- Thẻ Butcher thích ứng giao diện Sáng / Tối ---------- */
+.butcher-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root,
+html.theme-dark,
+[data-theme="dark"] {
+  .butcher-card {
+    background: linear-gradient(135deg, #1c1810 0%, #141416 50%, #0c0c0e 100%);
+    border-color: rgba(201, 169, 106, 0.3);
+  }
+}
+html.theme-light,
+[data-theme="light"] {
+  .butcher-card {
+    background: linear-gradient(135deg, #ffffff 0%, #faf8f4 100%);
+    border-color: rgba(153, 115, 46, 0.28);
+    box-shadow: 0 4px 20px -2px rgba(153, 115, 46, 0.08);
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root:not(.theme-dark):not([data-theme="dark"]) .butcher-card {
+    background: linear-gradient(135deg, #ffffff 0%, #faf8f4 100%);
+    border-color: rgba(153, 115, 46, 0.28);
+    box-shadow: 0 4px 20px -2px rgba(153, 115, 46, 0.08);
+  }
+}
+
+input,
+textarea,
+select {
+  font-family: var(--font-body);
+  color: var(--washi);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+}

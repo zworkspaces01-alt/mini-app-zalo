@@ -1,26 +1,27 @@
-import heroDon from "@/static/img/hero-don.jpg";
-import heroHotpot from "@/static/img/hero-hotpot.jpg";
-import heroOmakase from "@/static/img/hero-omakase.jpg";
-import heroSushi from "@/static/img/hero-sushi.jpg";
-import heroWagyu from "@/static/img/hero-wagyu.jpg";
-import logo from "@/static/img/logo.png";
-import logoDark from "@/static/img/logo-dark.png";
-import space from "@/static/img/space.jpg";
-import omakaseCounter from "@/static/img/omakase-counter.jpg";
-import omakaseTatami from "@/static/img/omakase-tatami.jpg";
-import omakaseChefPrep from "@/static/img/omakase-chef-prep.jpg";
-import omakaseCounterMood from "@/static/img/omakase-counter-mood.jpg";
-
-import logoHorizontal from "@/static/img/Light@4x-scaled.png";
-import logoHorizontalDark from "@/static/img/logo-horizontal-dark.png";
-
 /**
- * Ảnh thật của Miyako: logo và ảnh không gian lấy từ bộ nhận diện,
- * ảnh món cắt từ chính bộ menu in của nhà hàng.
- *
- * Muốn thêm ảnh cho món khác: bỏ file vào `src/static/img/`, khai báo ở đây,
- * rồi điền khoá vào trường `image` của món trong `src/data/menu.ts`.
+ * Toàn bộ hình ảnh Miyako được lưu trữ và tối ưu hoá trực tiếp trên Cloudinary CDN.
+ * Tự động nén chuẩn WebP/AVIF (f_auto,q_auto) cho tốc độ tải tức thì trên Zalo Mini App.
  */
+
+const CDN = "https://res.cloudinary.com/dn2qfbkbu/image/upload/f_auto,q_auto/v1789998866/miyako/static";
+
+export const logo = `${CDN}/logo.png`;
+export const logoDark = `${CDN}/logo-dark.png`;
+export const logoHorizontal = `${CDN}/Light_4x-scaled.png`;
+export const logoHorizontalDark = `${CDN}/logo-horizontal-dark.png`;
+export const space = `${CDN}/space.jpg`;
+
+export const omakaseCounter = `${CDN}/omakase-counter.jpg`;
+export const omakaseTatami = `${CDN}/omakase-tatami.jpg`;
+export const omakaseChefPrep = `${CDN}/omakase-chef-prep.jpg`;
+export const omakaseCounterMood = `${CDN}/omakase-counter-mood.jpg`;
+
+export const heroDon = `${CDN}/hero-don.jpg`;
+export const heroHotpot = `${CDN}/hero-hotpot.jpg`;
+export const heroOmakase = `${CDN}/hero-omakase.jpg`;
+export const heroSushi = `${CDN}/hero-sushi.jpg`;
+export const heroWagyu = `${CDN}/hero-wagyu.jpg`;
+
 export const IMAGES: Record<string, string> = {
   logo,
   "logo-dark": logoDark,
@@ -57,14 +58,4 @@ export {
   logoHorizontal as logoHorizontalSrc,
   logoHorizontalDark as logoHorizontalDarkSrc,
   space as spaceSrc,
-  omakaseCounter,
-  omakaseTatami,
-  omakaseChefPrep,
-  omakaseCounterMood,
-  heroDon,
-  heroHotpot,
-  heroOmakase,
-  heroSushi,
-  heroWagyu,
 };
-

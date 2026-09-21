@@ -2,19 +2,29 @@ import { supabase } from "./supabase";
 
 const BUCKET = "miyako-assets";
 
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY;
-const API_SECRET = import.meta.env.VITE_CLOUDINARY_API_SECRET;
+interface CloudinarySignature {
+  cloud_name: string;
+  api_key: string;
+  folder: string;
+  timestamp: number;
+  signature: string;
+}
 
 /**
- * Tính mã băm SHA-1 bằng Web Crypto API tiêu chuẩn của trình duyệt
+ * Xin chữ ký tải ảnh từ Edge Function `cloudinary-sign`.
+ *
+ * API secret của Cloudinary chỉ nằm trên máy chủ, không bao giờ ở trình
+ * duyệt. Hàm chưa deploy hoặc chưa cấu hình thì trả null để lùi về Supabase.
  */
-async function sha1(str: string): Promise<string> {
-  const buffer = new TextEncoder().encode(str);
-  const digest = await crypto.subtle.digest("SHA-1", buffer);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+async function signCloudinaryUpload(folder: string): Promise<CloudinarySignature | null> {
+  const { data, error } = await supabase.functions.invoke("cloudinary-sign", {
+    body: { folder },
+  });
+  if (error || !data?.signature) {
+    console.warn("Không xin được chữ ký Cloudinary, dùng Supabase Storage:", error ?? data);
+    return null;
+  }
+  return data as CloudinarySignature;
 }
 
 /**
@@ -25,25 +35,21 @@ export async function uploadImage(
   file: File,
   folder: "dishes" | "omakase" | "banners" | "categories" | "rewards" = "dishes"
 ): Promise<{ url: string | null; error: string | null }> {
-  // 1. Ưu tiên Cloudinary nếu có cấu hình
-  if (CLOUD_NAME && API_KEY && API_SECRET) {
-    try {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const targetFolder = `miyako/${folder}`;
-      const toSign = `folder=${targetFolder}&timestamp=${timestamp}${API_SECRET}`;
-      const signature = await sha1(toSign);
-
+  // 1. Ưu tiên Cloudinary nếu máy chủ ký được
+  try {
+    const signed = await signCloudinaryUpload(folder);
+    if (signed) {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("api_key", API_KEY);
-      formData.append("timestamp", String(timestamp));
-      formData.append("folder", targetFolder);
-      formData.append("signature", signature);
+      formData.append("api_key", signed.api_key);
+      formData.append("timestamp", String(signed.timestamp));
+      formData.append("folder", signed.folder);
+      formData.append("signature", signed.signature);
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${signed.cloud_name}/image/upload`,
+        { method: "POST", body: formData }
+      );
 
       if (res.ok) {
         const data = await res.json();
@@ -52,9 +58,9 @@ export async function uploadImage(
 
       const errData = await res.json().catch(() => ({}));
       console.warn("Cloudinary upload failed, falling back to Supabase:", errData);
-    } catch (err) {
-      console.warn("Cloudinary error, fallback to Supabase:", err);
     }
+  } catch (err) {
+    console.warn("Cloudinary error, fallback to Supabase:", err);
   }
 
   // 2. Fallback sang Supabase Storage bucket miyako-assets

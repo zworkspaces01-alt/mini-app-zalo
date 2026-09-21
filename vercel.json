@@ -1,9 +1,0 @@
-{
-  "outputDirectory": "dist-check",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}

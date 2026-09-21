@@ -345,7 +345,7 @@ export default function RewardsPage() {
               setActiveTab("gifts");
             }}
           >
-            🎁 Đổi Quà & Voucher
+            Đổi Quà & Voucher
           </Chip>
           <Chip
             active={activeTab === "tiers"}
@@ -354,7 +354,7 @@ export default function RewardsPage() {
               setActiveTab("tiers");
             }}
           >
-            👑 Đặc Quyền Hạng
+            Đặc Quyền Hạng
           </Chip>
           <Chip
             active={activeTab === "quests"}
@@ -363,7 +363,7 @@ export default function RewardsPage() {
               setActiveTab("quests");
             }}
           >
-            🎯 Nhiệm Vụ Kiếm Điểm
+            Nhiệm Vụ Kiếm Điểm
           </Chip>
           <Chip
             active={activeTab === "history"}
@@ -372,7 +372,7 @@ export default function RewardsPage() {
               setActiveTab("history");
             }}
           >
-            📜 Lịch Sử Điểm
+            Lịch Sử Điểm
           </Chip>
         </div>
       </header>

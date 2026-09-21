@@ -59,6 +59,7 @@ export const IconClock = wrap(Outline.ClockIcon, Solid.ClockIcon);
 export const IconPhone = wrap(Outline.PhoneIcon, Solid.PhoneIcon);
 export const IconChat = wrap(Outline.ChatBubbleLeftEllipsisIcon, Solid.ChatBubbleLeftEllipsisIcon);
 export const IconPin = wrap(Outline.MapPinIcon, Solid.MapPinIcon);
+export const IconClipboard = wrap(Outline.ClipboardDocumentIcon, Solid.ClipboardDocumentIcon);
 
 /* ─── Tiện Ích & Hệ Thống ─── */
 export const IconUsers = wrap(Outline.UsersIcon, Solid.UsersIcon);

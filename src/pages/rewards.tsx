@@ -34,8 +34,210 @@ import {
 } from "@/state/atoms";
 import { formatNumber, vnd } from "@/utils/format";
 
-/* ─── Danh mục quà tặng đổi điểm ─── */
+/* ─── Danh mục quà tặng đổi điểm hỗ trợ 3 ngôn ngữ ─── */
 type GiftCategory = "all" | "voucher" | "dish" | "drink";
+
+interface LocalizedString {
+  vi: string;
+  en: string;
+  ja: string;
+}
+
+interface RawRewardGift {
+  id: string;
+  category: GiftCategory;
+  title: LocalizedString;
+  desc: LocalizedString;
+  worthText: LocalizedString;
+  pointsCost: number;
+  badge?: LocalizedString;
+  icon: React.ReactNode;
+}
+
+const RAW_REWARD_GIFTS: RawRewardGift[] = [
+  {
+    id: "gift-v50",
+    category: "voucher",
+    title: {
+      vi: "Voucher Giảm 50.000đ",
+      en: "50,000₫ Cash Voucher",
+      ja: "50,000₫ お食事券",
+    },
+    desc: {
+      vi: "Trừ trực tiếp trên hoá đơn dùng bữa hoặc mua thịt Butcher",
+      en: "Direct discount on dine-in or Butcher meat orders",
+      ja: "店内飲食または精肉のご購入時にご利用可能",
+    },
+    worthText: {
+      vi: "Trị giá 50.000đ",
+      en: "Worth 50,000₫",
+      ja: "50,000₫ 相当",
+    },
+    pointsCost: 50,
+    badge: {
+      vi: "Dễ đổi nhất",
+      en: "Easiest",
+      ja: "交換しやすい",
+    },
+    icon: <Icon3DVoucher size={36} />,
+  },
+  {
+    id: "gift-v100",
+    category: "voucher",
+    title: {
+      vi: "Voucher Giảm 100.000đ",
+      en: "100,000₫ Cash Voucher",
+      ja: "100,000₫ お食事券",
+    },
+    desc: {
+      vi: "Áp dụng cho hoá đơn từ 500.000đ tại toàn hệ thống",
+      en: "Applicable for orders from 500,000₫ across all locations",
+      ja: "500,000₫以上のお会計で全店共通利用可能",
+    },
+    worthText: {
+      vi: "Trị giá 100.000đ",
+      en: "Worth 100,000₫",
+      ja: "100,000₫ 相当",
+    },
+    pointsCost: 100,
+    badge: {
+      vi: "Phổ biến",
+      en: "Popular",
+      ja: "人気",
+    },
+    icon: <Icon3DVoucher size={36} />,
+  },
+  {
+    id: "gift-v200",
+    category: "voucher",
+    title: {
+      vi: "Voucher Giảm 200.000đ",
+      en: "200,000₫ Cash Voucher",
+      ja: "200,000₫ お食事券",
+    },
+    desc: {
+      vi: "Áp dụng cho mọi bữa ăn hoặc đơn hàng Wagyu Butcher",
+      en: "Applicable for all dining meals or Wagyu Butcher orders",
+      ja: "すべてのお食事または和牛精肉のご注文で利用可能",
+    },
+    worthText: {
+      vi: "Trị giá 200.000đ",
+      en: "Worth 200,000₫",
+      ja: "200,000₫ 相当",
+    },
+    pointsCost: 200,
+    badge: {
+      vi: "Ưu đãi lớn",
+      en: "Big Value",
+      ja: "お得",
+    },
+    icon: <Icon3DVoucher size={36} />,
+  },
+  {
+    id: "gift-sashimi",
+    category: "dish",
+    title: {
+      vi: "Sashimi Cá Hồi Na Uy Tươi",
+      en: "Fresh Norwegian Salmon Sashimi",
+      ja: "特選ノルウェー産生サーモン刺身",
+    },
+    desc: {
+      vi: "Tặng 1 đĩa Sashimi cá hồi nhập khẩu Na Uy hảo hạng",
+      en: "Complimentary premium fresh Norwegian salmon sashimi plate",
+      ja: "極上ノルウェー産生サーモン刺身を一皿プレゼント",
+    },
+    worthText: {
+      vi: "Trị giá 185.000đ",
+      en: "Worth 185,000₫",
+      ja: "185,000₫ 相当",
+    },
+    pointsCost: 250,
+    badge: {
+      vi: "Món Bếp Trưởng",
+      en: "Chef's Pick",
+      ja: "料理長おすすめ",
+    },
+    icon: <Icon3DSushi size={36} />,
+  },
+  {
+    id: "gift-wagyu",
+    category: "dish",
+    title: {
+      vi: "Bò Wagyu A5 Nướng Đá Núi Lửa",
+      en: "A5 Wagyu on Volcano Stone",
+      ja: "A5和牛 溶岩石焼き",
+    },
+    desc: {
+      vi: "Tặng 1 phần Wagyu A5 nướng đá thơm lừng béo ngậy",
+      en: "Complimentary sizzling melt-in-mouth A5 Wagyu portion",
+      ja: "芳醇な香りととろける旨味のA5和牛を1人前進呈",
+    },
+    worthText: {
+      vi: "Trị giá 360.000đ",
+      en: "Worth 360,000₫",
+      ja: "360,000₫ 相当",
+    },
+    pointsCost: 450,
+    badge: {
+      vi: "Wagyu A5",
+      en: "Wagyu A5",
+      ja: "A5和牛",
+    },
+    icon: <Icon3DMeat size={36} />,
+  },
+  {
+    id: "gift-sake",
+    category: "drink",
+    title: {
+      vi: "Chai Rượu Sake Vảy Vàng 720ml",
+      en: "Gold Flake Sake Bottle 720ml",
+      ja: "金箔入り特撰日本酒 720ml",
+    },
+    desc: {
+      vi: "Rượu Sake thượng hạng chứa vảy vàng 24k tinh khiết Nhật Bản",
+      en: "Premium Japanese sake infused with pure 24k gold flakes",
+      ja: "純度24Kの金箔が舞う贅沢な日本産特撰酒",
+    },
+    worthText: {
+      vi: "Trị giá 790.000đ",
+      en: "Worth 790,000₫",
+      ja: "790,000₫ 相当",
+    },
+    pointsCost: 800,
+    badge: {
+      vi: "VIP Gift",
+      en: "VIP Gift",
+      ja: "VIP限定",
+    },
+    icon: <Icon3DPoints size={36} />,
+  },
+  {
+    id: "gift-omakase",
+    category: "dish",
+    title: {
+      vi: "1 Vé Omakase Thượng Hạng",
+      en: "1 Premium Omakase Ticket",
+      ja: "極上おまかせ食事券 1名様分",
+    },
+    desc: {
+      vi: "Trải nghiệm trọn vẹn set menu 12 món do Bếp trưởng phục vụ",
+      en: "Full 12-course dining experience crafted by the Head Chef",
+      ja: "総料理長が目の前で振る舞う全12品のコース体験",
+    },
+    worthText: {
+      vi: "Trị giá 1.500.000đ",
+      en: "Worth 1,500,000₫",
+      ja: "1,500,000₫ 相当",
+    },
+    pointsCost: 1500,
+    badge: {
+      vi: "Đặc biệt",
+      en: "Special",
+      ja: "特別",
+    },
+    icon: <Icon3DFire size={36} />,
+  },
+];
 
 interface RewardGift {
   id: string;
@@ -48,80 +250,99 @@ interface RewardGift {
   icon: React.ReactNode;
 }
 
-const REWARD_GIFTS: RewardGift[] = [
+/* ─── Nhiệm vụ kiếm thêm điểm hỗ trợ 3 ngôn ngữ ─── */
+interface RawQuest {
+  id: string;
+  title: LocalizedString;
+  desc: LocalizedString;
+  points: number;
+  icon: string;
+  actionText: LocalizedString;
+}
+
+const RAW_QUESTS: RawQuest[] = [
   {
-    id: "gift-v50",
-    category: "voucher",
-    title: "Voucher Giảm 50.000đ",
-    desc: "Trừ trực tiếp trên hoá đơn dùng bữa hoặc mua thịt Butcher",
-    worthText: "Trị giá 50.000đ",
-    pointsCost: 50,
-    badge: "Dễ đổi nhất",
-    icon: <Icon3DVoucher size={36} />,
+    id: "q-checkin",
+    title: {
+      vi: "Điểm danh mỗi ngày",
+      en: "Daily Check-in",
+      ja: "毎日ログイン",
+    },
+    desc: {
+      vi: "Mở Zalo Mini App để nhận điểm tích luỹ hàng ngày",
+      en: "Open Zalo Mini App to claim daily loyalty points",
+      ja: "アプリを開いて毎日の来店ポイントを獲得",
+    },
+    points: 15,
+    icon: "📅",
+    actionText: {
+      vi: "Điểm danh",
+      en: "Check in",
+      ja: "獲得する",
+    },
   },
   {
-    id: "gift-v100",
-    category: "voucher",
-    title: "Voucher Giảm 100.000đ",
-    desc: "Áp dụng cho hoá đơn từ 500.000đ tại toàn hệ thống",
-    worthText: "Trị giá 100.000đ",
-    pointsCost: 100,
-    badge: "Phổ biến",
-    icon: <Icon3DVoucher size={36} />,
+    id: "q-dinein",
+    title: {
+      vi: "Check-in dùng bữa tại nhà hàng",
+      en: "Dine-in Check-in",
+      ja: "店舗でチェックイン",
+    },
+    desc: {
+      vi: "Quét QR tại bàn ăn hoặc hoá đơn thanh toán",
+      en: "Scan QR code at your dining table or invoice",
+      ja: "お席のQRコードまたは伝票をスキャン",
+    },
+    points: 30,
+    icon: "🥢",
+    actionText: {
+      vi: "Quét QR",
+      en: "Scan QR",
+      ja: "QRスキャン",
+    },
   },
   {
-    id: "gift-v200",
-    category: "voucher",
-    title: "Voucher Giảm 200.000đ",
-    desc: "Áp dụng cho mọi bữa ăn hoặc đơn hàng Wagyu Butcher",
-    worthText: "Trị giá 200.000đ",
-    pointsCost: 200,
-    badge: "Ưu đãi lớn",
-    icon: <Icon3DVoucher size={36} />,
+    id: "q-review",
+    title: {
+      vi: "Đánh giá dịch vụ 5 sao",
+      en: "Leave 5-Star Review",
+      ja: "5つ星レビューを投稿",
+    },
+    desc: {
+      vi: "Để lại cảm nhận và hình ảnh trải nghiệm ẩm thực",
+      en: "Share photos and feedback about your dining experience",
+      ja: "お料理の写真と感想を投稿してシェア",
+    },
+    points: 50,
+    icon: "⭐",
+    actionText: {
+      vi: "Đánh giá",
+      en: "Review",
+      ja: "評価する",
+    },
   },
   {
-    id: "gift-sashimi",
-    category: "dish",
-    title: "Sashimi Cá Hồi Na Uy Tươi",
-    desc: "Tặng 1 đĩa Sashimi cá hồi nhập khẩu Na Uy hảo hạng",
-    worthText: "Trị giá 185.000đ",
-    pointsCost: 250,
-    badge: "Món Bếp Trưởng",
-    icon: <Icon3DSushi size={36} />,
-  },
-  {
-    id: "gift-wagyu",
-    category: "dish",
-    title: "Bò Wagyu A5 Nướng Đá Núi Lửa",
-    desc: "Tặng 1 phần Wagyu A5 nướng đá thơm lừng béo ngậy",
-    worthText: "Trị giá 360.000đ",
-    pointsCost: 450,
-    badge: "Wagyu A5",
-    icon: <Icon3DMeat size={36} />,
-  },
-  {
-    id: "gift-sake",
-    category: "drink",
-    title: "Chai Rượu Sake Vảy Vàng 720ml",
-    desc: "Rượu Sake thượng hạng chứa vảy vàng 24k tinh khiết Nhật Bản",
-    worthText: "Trị giá 790.000đ",
-    pointsCost: 800,
-    badge: "VIP Gift",
-    icon: <Icon3DPoints size={36} />,
-  },
-  {
-    id: "gift-omakase",
-    category: "dish",
-    title: "1 Vé Omakase Thượng Hạng",
-    desc: "Trải nghiệm trọn vẹn set menu 12 món do Bếp trưởng phục vụ",
-    worthText: "Trị giá 1.500.000đ",
-    pointsCost: 1500,
-    badge: "Đặc biệt",
-    icon: <Icon3DFire size={36} />,
+    id: "q-share",
+    title: {
+      vi: "Chia sẻ Miyako cho bạn bè",
+      en: "Share with Friends",
+      ja: "お友達にシェア",
+    },
+    desc: {
+      vi: "Mời bạn bè cùng gia nhập Miyako VIP Club",
+      en: "Invite friends to join the Miyako VIP Club",
+      ja: "お友達を宮古VIPクラブにご招待",
+    },
+    points: 100,
+    icon: "🎁",
+    actionText: {
+      vi: "Chia sẻ",
+      en: "Share",
+      ja: "シェア",
+    },
   },
 ];
 
-/* ─── Nhiệm vụ kiếm thêm điểm ─── */
 interface Quest {
   id: string;
   title: string;
@@ -155,41 +376,35 @@ export default function RewardsPage() {
   const [redeemedCode, setRedeemedCode] = useState<string | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState(false);
 
-  // Quests state (mô phỏng check-in/nhiệm vụ)
-  const [quests, setQuests] = useState<Quest[]>([
-    {
-      id: "q-checkin",
-      title: "Điểm danh mỗi ngày",
-      desc: "Mở Zalo Mini App để nhận điểm tích luỹ hàng ngày",
-      points: 15,
-      icon: "📅",
-      actionText: "Điểm danh",
-    },
-    {
-      id: "q-dinein",
-      title: "Check-in dùng bữa tại nhà hàng",
-      desc: "Quét QR tại bàn ăn hoặc hoá đơn thanh toán",
-      points: 30,
-      icon: "🥢",
-      actionText: "Quét QR",
-    },
-    {
-      id: "q-review",
-      title: "Đánh giá dịch vụ 5 sao",
-      desc: "Để lại cảm nhận và hình ảnh trải nghiệm ẩm thực",
-      points: 50,
-      icon: "⭐",
-      actionText: "Đánh giá",
-    },
-    {
-      id: "q-share",
-      title: "Chia sẻ Miyako cho bạn bè",
-      desc: "Mời bạn bè cùng gia nhập Miyako VIP Club",
-      points: 100,
-      icon: "🎁",
-      actionText: "Chia sẻ",
-    },
-  ]);
+  // Danh sách quà tặng theo ngôn ngữ hiện tại
+  const localizedGifts = useMemo<RewardGift[]>(() => {
+    return RAW_REWARD_GIFTS.map((g) => ({
+      id: g.id,
+      category: g.category,
+      title: g.title[lang] ?? g.title.vi,
+      desc: g.desc[lang] ?? g.desc.vi,
+      worthText: g.worthText[lang] ?? g.worthText.vi,
+      pointsCost: g.pointsCost,
+      badge: g.badge ? (g.badge[lang] ?? g.badge.vi) : undefined,
+      icon: g.icon,
+    }));
+  }, [lang]);
+
+  // Quests state đã hoàn thành
+  const [completedQuestIds, setCompletedQuestIds] = useState<string[]>([]);
+
+  // Quests theo ngôn ngữ hiện tại
+  const quests = useMemo<Quest[]>(() => {
+    return RAW_QUESTS.map((q) => ({
+      id: q.id,
+      title: q.title[lang] ?? q.title.vi,
+      desc: q.desc[lang] ?? q.desc.vi,
+      points: q.points,
+      icon: q.icon,
+      actionText: q.actionText[lang] ?? q.actionText.vi,
+      completed: completedQuestIds.includes(q.id),
+    }));
+  }, [lang, completedQuestIds]);
 
   // Quét QR
   const handleScan = async () => {
@@ -200,12 +415,26 @@ export default function RewardsPage() {
     // Tự động thưởng 30 điểm khi quét QR bàn
     haptic("medium");
     setPoints((p) => p + 30);
+    const bonusTitle =
+      lang === "ja"
+        ? "テーブルQR読み取りポイント"
+        : lang === "en"
+        ? "Table QR Scan Reward"
+        : "Tích điểm quét QR tại bàn";
+    const bonusDesc =
+      lang === "ja"
+        ? `テーブル ${match?.[1] ?? content.slice(0, 8)} のスキャン特典`
+        : lang === "en"
+        ? `Bonus for table ${match?.[1] ?? content.slice(0, 8)}`
+        : `Thưởng quét QR bàn ${match?.[1] ?? content.slice(0, 8)}`;
+    const nowText = lang === "ja" ? "たった今" : lang === "en" ? "Just now" : "Vừa xong";
+
     setHistory((prev) => [
       {
         id: "p-" + Date.now(),
-        title: "Tích điểm quét QR tại bàn",
-        desc: `Thưởng quét QR bàn ${match?.[1] ?? content.slice(0, 8)}`,
-        date: "Vừa xong",
+        title: bonusTitle,
+        desc: bonusDesc,
+        date: nowText,
         points: 30,
         type: "order",
       },
@@ -213,27 +442,27 @@ export default function RewardsPage() {
     ]);
   };
 
-  // Tiến trình hạng thành viên
+  // Tiến trình hạng thành viên hỗ trợ 3 ngôn ngữ
   const tierInfo = useMemo(() => {
     switch (tier) {
       case "silver":
         return {
           name: "Silver Member",
-          title: "Hạng Bạc",
-          rateText: "Tích 5% hoá đơn",
-          nextTier: "Hạng Vàng",
+          title: lang === "ja" ? "シルバー会員" : lang === "en" ? "Silver Tier" : "Hạng Bạc",
+          rateText: lang === "ja" ? "5%ポイント還元" : lang === "en" ? "5% points back" : "Tích 5% hoá đơn",
+          nextTier: lang === "ja" ? "ゴールド会員" : lang === "en" ? "Gold Tier" : "Hạng Vàng",
           needed: 1000 - points,
           progress: Math.min(100, Math.round((points / 1000) * 100)),
           color: "from-zinc-400 to-slate-200",
           cardBg: "from-[#22272b] via-[#161a1d] to-[#0c0e10]",
           badgeBg: "bg-slate-400/20 text-slate-300 border-slate-400/30",
         };
-      case "platinum":
+      case "diamond":
         return {
-          name: "Platinum Member",
-          title: "Hạng Bạch Kim",
-          rateText: "Tích 12% hoá đơn",
-          nextTier: "Hạng Tối Thượng",
+          name: "Diamond Member",
+          title: lang === "ja" ? "ダイヤモンド会員" : lang === "en" ? "Diamond Tier" : "Hạng Kim Cương",
+          rateText: lang === "ja" ? "12%ポイント還元" : lang === "en" ? "12% points back" : "Tích 12% hoá đơn",
+          nextTier: lang === "ja" ? "最高位" : lang === "en" ? "Highest Tier" : "Hạng Tối Thượng",
           needed: 0,
           progress: 100,
           color: "from-cyan-300 to-blue-500",
@@ -244,9 +473,9 @@ export default function RewardsPage() {
       default:
         return {
           name: "Gold Member",
-          title: "Hạng Vàng",
-          rateText: "Tích 8% hoá đơn",
-          nextTier: "Hạng Bạch Kim",
+          title: lang === "ja" ? "ゴールド会員" : lang === "en" ? "Gold Tier" : "Hạng Vàng",
+          rateText: lang === "ja" ? "8%ポイント還元" : lang === "en" ? "8% points back" : "Tích 8% hoá đơn",
+          nextTier: lang === "ja" ? "プラチナ会員" : lang === "en" ? "Platinum Tier" : "Hạng Bạch Kim",
           needed: Math.max(0, 2000 - points),
           progress: Math.min(100, Math.round((points / 2000) * 100)),
           color: "from-amber-300 via-yellow-400 to-amber-600",
@@ -254,13 +483,13 @@ export default function RewardsPage() {
           badgeBg: "bg-amber-400/20 text-amber-300 border-amber-400/30",
         };
     }
-  }, [tier, points]);
+  }, [tier, points, lang]);
 
   // Lọc quà
   const filteredGifts = useMemo(() => {
-    if (giftCategory === "all") return REWARD_GIFTS;
-    return REWARD_GIFTS.filter((g) => g.category === giftCategory);
-  }, [giftCategory]);
+    if (giftCategory === "all") return localizedGifts;
+    return localizedGifts.filter((g) => g.category === giftCategory);
+  }, [localizedGifts, giftCategory]);
 
   // Xử lý đổi quà
   const handleConfirmRedeem = () => {
@@ -290,15 +519,28 @@ export default function RewardsPage() {
     if (q.completed) return;
     haptic("medium");
     setPoints((p) => p + q.points);
-    setQuests((prev) =>
-      prev.map((item) => (item.id === q.id ? { ...item, completed: true } : item))
-    );
+    setCompletedQuestIds((prev) => [...prev, q.id]);
+
+    const titleText =
+      lang === "ja"
+        ? `ミッション達成：${q.title}`
+        : lang === "en"
+        ? `Quest: ${q.title}`
+        : `Nhiệm vụ: ${q.title}`;
+    const descText =
+      lang === "ja"
+        ? "ミッション完了ボーナス"
+        : lang === "en"
+        ? "Quest completion reward"
+        : "Thưởng hoàn thành nhiệm vụ tích luỹ";
+    const nowText = lang === "ja" ? "たった今" : lang === "en" ? "Just now" : "Vừa xong";
+
     setHistory((prev) => [
       {
         id: "p-" + Date.now(),
-        title: `Nhiệm vụ: ${q.title}`,
-        desc: "Thưởng hoàn thành nhiệm vụ tích luỹ",
-        date: "Vừa xong",
+        title: titleText,
+        desc: descText,
+        date: nowText,
         points: q.points,
         type: "reward",
       },
@@ -345,7 +587,7 @@ export default function RewardsPage() {
               setActiveTab("gifts");
             }}
           >
-            Đổi Quà & Voucher
+            {t.rewards.tabGifts}
           </Chip>
           <Chip
             active={activeTab === "tiers"}
@@ -354,7 +596,7 @@ export default function RewardsPage() {
               setActiveTab("tiers");
             }}
           >
-            Đặc Quyền Hạng
+            {t.rewards.tabTiers}
           </Chip>
           <Chip
             active={activeTab === "quests"}
@@ -363,7 +605,7 @@ export default function RewardsPage() {
               setActiveTab("quests");
             }}
           >
-            Nhiệm Vụ Kiếm Điểm
+            {t.rewards.tabQuests}
           </Chip>
           <Chip
             active={activeTab === "history"}
@@ -372,7 +614,7 @@ export default function RewardsPage() {
               setActiveTab("history");
             }}
           >
-            Lịch Sử Điểm
+            {t.rewards.tabHistory}
           </Chip>
         </div>
       </header>
@@ -392,7 +634,7 @@ export default function RewardsPage() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10.5px] uppercase tracking-widest font-semibold text-[var(--gold)]">
-                  Miyako Club
+                  {t.rewards.memberTitle}
                 </span>
                 <span
                   className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${tierInfo.badgeBg}`}
@@ -401,7 +643,7 @@ export default function RewardsPage() {
                 </span>
               </div>
               <h2 className="mt-1 font-display text-[17px] font-bold tracking-wide">
-                {user?.name ?? "Quý Khách Hàng"}
+                {user?.name ?? (lang === "ja" ? "お客様" : lang === "en" ? "Valued Guest" : "Quý Khách Hàng")}
               </h2>
               <div className="font-mono text-[11px] text-[var(--faint)]">
                 #MYK-8899-VIP
@@ -415,13 +657,13 @@ export default function RewardsPage() {
 
           {/* Điểm hiện có */}
           <div className="mt-3.5 relative z-10">
-            <div className="text-[11px] text-[var(--faint)]">Số điểm tích luỹ</div>
+            <div className="text-[11px] text-[var(--faint)]">{t.rewards.currentPoints}</div>
             <div className="flex items-baseline gap-1.5">
               <span className="font-display text-[28px] font-extrabold tracking-tight text-[var(--gold)]">
                 {formatNumber(points)}
               </span>
               <span className="text-[13px] font-medium text-[var(--washi)]">
-                điểm thưởng
+                {t.rewards.pointsUnit}
               </span>
               <span className="ml-auto text-[11.5px] font-medium text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                 {tierInfo.rateText}
@@ -435,8 +677,8 @@ export default function RewardsPage() {
               <span>{tierInfo.title}</span>
               <span>
                 {tierInfo.needed > 0
-                  ? `Còn ${tierInfo.needed} điểm để lên ${tierInfo.nextTier}`
-                  : "Hạng cao nhất"}
+                  ? t.rewards.needMore(tierInfo.needed, tierInfo.nextTier)
+                  : t.rewards.maxTierReached}
               </span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -457,13 +699,21 @@ export default function RewardsPage() {
               className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--gold)] to-amber-600 px-3 py-2 text-[12px] font-bold text-black shadow-md active:scale-98 transition-transform"
             >
               <IconQR size={15} />
-              <span>Mở Mã Tích Điểm Tại Quầy</span>
+              <span>
+                {lang === "ja"
+                  ? "会員コードを表示"
+                  : lang === "en"
+                  ? "Show Counter QR / Barcode"
+                  : "Mở Mã Tích Điểm Tại Quầy"}
+              </span>
             </button>
             <button
               onClick={handleScan}
               className="flex items-center justify-center gap-1 rounded-xl bg-white/10 border border-white/15 px-3 py-2 text-[12px] font-medium text-white hover:bg-white/15 active:scale-98 transition-transform"
             >
-              <span>Quét Bàn</span>
+              <span>
+                {lang === "ja" ? "QRスキャン" : lang === "en" ? "Scan Table" : "Quét Bàn"}
+              </span>
             </button>
           </div>
         </div>
@@ -474,10 +724,15 @@ export default function RewardsPage() {
             {/* Bộ lọc loại quà */}
             <div className="flex items-center justify-between">
               <h3 className="font-display text-[15px] font-bold text-[var(--washi)]">
-                Ưu Đãi & Quà Tặng Đổi Điểm
+                {lang === "ja"
+                  ? "ポイント交換特典・クーポン"
+                  : lang === "en"
+                  ? "Rewards & Vouchers"
+                  : "Ưu Đãi & Quà Tặng Đổi Điểm"}
               </h3>
               <span className="text-[11.5px] text-[var(--muted)]">
-                {filteredGifts.length} phần quà
+                {filteredGifts.length}{" "}
+                {lang === "ja" ? "件" : lang === "en" ? "rewards" : "phần quà"}
               </span>
             </div>
 
@@ -490,7 +745,7 @@ export default function RewardsPage() {
                     : "bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]"
                 }`}
               >
-                Tất cả
+                {t.rewards.catAll}
               </button>
               <button
                 onClick={() => setGiftCategory("voucher")}
@@ -500,7 +755,7 @@ export default function RewardsPage() {
                     : "bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]"
                 }`}
               >
-                Voucher Tiền Mặt
+                {t.rewards.catVoucher}
               </button>
               <button
                 onClick={() => setGiftCategory("dish")}
@@ -510,7 +765,7 @@ export default function RewardsPage() {
                     : "bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]"
                 }`}
               >
-                Món Thượng Hạng
+                {t.rewards.catDish}
               </button>
               <button
                 onClick={() => setGiftCategory("drink")}
@@ -520,7 +775,7 @@ export default function RewardsPage() {
                     : "bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]"
                 }`}
               >
-                Rượu Sake & Đồ Uống
+                {t.rewards.catDrink}
               </button>
             </div>
 
@@ -553,7 +808,7 @@ export default function RewardsPage() {
                         </p>
                         <div className="mt-1 flex items-center gap-2 text-[11px]">
                           <span className="font-bold text-[var(--gold)]">
-                            {formatNumber(gift.pointsCost)} điểm
+                            {formatNumber(gift.pointsCost)} {t.rewards.pts}
                           </span>
                           <span className="text-[var(--faint)]">·</span>
                           <span className="text-[var(--faint)]">{gift.worthText}</span>
@@ -572,7 +827,9 @@ export default function RewardsPage() {
                           : "bg-[var(--surface-3)] text-[var(--faint)] border border-[var(--line)]"
                       }`}
                     >
-                      {canAfford ? "Đổi ngay" : "Chưa đủ"}
+                      {canAfford
+                        ? (lang === "ja" ? "今すぐ交換" : lang === "en" ? "Redeem" : "Đổi ngay")
+                        : (lang === "ja" ? "不足" : lang === "en" ? "Short" : "Chưa đủ")}
                     </button>
                   </div>
                 );
@@ -585,7 +842,11 @@ export default function RewardsPage() {
         {activeTab === "tiers" && (
           <div className="space-y-3">
             <h3 className="font-display text-[15px] font-bold text-[var(--washi)]">
-              Quyền Lợi Theo Từng Hạng Hội Viên
+              {lang === "ja"
+                ? "会員ランクごとの限定特典"
+                : lang === "en"
+                ? "Membership Tier Benefits"
+                : "Quyền Lợi Theo Từng Hạng Hội Viên"}
             </h3>
 
             {/* Bạc */}
@@ -595,29 +856,47 @@ export default function RewardsPage() {
                   <span className="text-[20px]">🥉</span>
                   <div>
                     <h4 className="font-display text-[15px] font-bold text-slate-300">
-                      Hạng Bạc (Silver)
+                      {lang === "ja" ? "シルバー会員 (Silver)" : lang === "en" ? "Silver Member" : "Hạng Bạc (Silver)"}
                     </h4>
                     <span className="text-[11px] text-[var(--faint)]">
-                      Từ 0 đến 999 điểm tích luỹ
+                      {lang === "ja" ? "0 〜 999 ポイント" : lang === "en" ? "0 to 999 accumulated points" : "Từ 0 đến 999 điểm tích luỹ"}
                     </span>
                   </div>
                 </div>
                 <span className="rounded-full bg-slate-500/15 px-2.5 py-0.5 text-[11px] font-bold text-slate-300 border border-slate-500/30">
-                  Tích 5%
+                  {lang === "ja" ? "5%還元" : lang === "en" ? "Earn 5%" : "Tích 5%"}
                 </span>
               </div>
               <ul className="mt-3 space-y-1.5 text-[12px] text-[var(--muted)] border-t border-[var(--line)] pt-3">
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-emerald-500 shrink-0" />
-                  <span>Tích luỹ 5% trên mọi hoá đơn ăn tại quán hoặc Butcher</span>
+                  <span>
+                    {lang === "ja"
+                      ? "店内飲食・精肉注文のすべてで5%ポイント還元"
+                      : lang === "en"
+                      ? "Accumulate 5% points on all dine-in and Butcher orders"
+                      : "Tích luỹ 5% trên mọi hoá đơn ăn tại quán hoặc Butcher"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-emerald-500 shrink-0" />
-                  <span>Tặng voucher 100.000đ trong tuần sinh nhật</span>
+                  <span>
+                    {lang === "ja"
+                      ? "お誕生週に100,000₫クーポンをプレゼント"
+                      : lang === "en"
+                      ? "Gift a 100,000₫ voucher during birthday week"
+                      : "Tặng voucher 100.000đ trong tuần sinh nhật"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-emerald-500 shrink-0" />
-                  <span>Quyền đổi quà và voucher từ kho điểm thưởng</span>
+                  <span>
+                    {lang === "ja"
+                      ? "ポイント交換所での限定アイテム交換権利"
+                      : lang === "en"
+                      ? "Right to redeem gifts and vouchers from points store"
+                      : "Quyền đổi quà và voucher từ kho điểm thưởng"}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -625,40 +904,64 @@ export default function RewardsPage() {
             {/* Vàng (Hiện tại) */}
             <div className="rounded-2xl border-2 border-[var(--gold)] bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface)] p-4 shadow-md relative overflow-hidden">
               <div className="absolute right-0 top-0 bg-[var(--gold)] text-black text-[9.5px] font-bold px-3 py-0.5 rounded-bl-xl uppercase tracking-wider">
-                Hạng Của Bạn
+                {lang === "ja" ? "現在のランク" : lang === "en" ? "Your Tier" : "Hạng Của Bạn"}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[20px]">🥈</span>
                   <div>
                     <h4 className="font-display text-[15px] font-bold text-[var(--gold)]">
-                      Hạng Vàng (Gold Member)
+                      {lang === "ja" ? "ゴールド会員 (Gold Member)" : lang === "en" ? "Gold Member" : "Hạng Vàng (Gold Member)"}
                     </h4>
                     <span className="text-[11px] text-[var(--faint)]">
-                      Từ 1.000 đến 1.999 điểm
+                      {lang === "ja" ? "1,000 〜 1,999 ポイント" : lang === "en" ? "1,000 to 1,999 points" : "Từ 1.000 đến 1.999 điểm"}
                     </span>
                   </div>
                 </div>
                 <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold text-[var(--gold)] border border-[var(--gold)]/30">
-                  Tích 8%
+                  {lang === "ja" ? "8%還元" : lang === "en" ? "Earn 8%" : "Tích 8%"}
                 </span>
               </div>
               <ul className="mt-3 space-y-1.5 text-[12px] text-[var(--washi)] border-t border-[var(--line)] pt-3">
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-[var(--gold)] shrink-0" />
-                  <span>Tích luỹ 8% giá trị mọi hoá đơn (ăn tại chỗ & mang về)</span>
+                  <span>
+                    {lang === "ja"
+                      ? "店内飲食・テイクアウトのすべてで8%ポイント還元"
+                      : lang === "en"
+                      ? "Accumulate 8% points on all orders (dine-in & take-away)"
+                      : "Tích luỹ 8% giá trị mọi hoá đơn (ăn tại chỗ & mang về)"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-[var(--gold)] shrink-0" />
-                  <span>Tặng 1 đĩa Sashimi Cá Hồi thượng hạng tháng sinh nhật</span>
+                  <span>
+                    {lang === "ja"
+                      ? "お誕生月に特選生サーモン刺身を一皿プレゼント"
+                      : lang === "en"
+                      ? "Free Premium Salmon Sashimi during birthday month"
+                      : "Tặng 1 đĩa Sashimi Cá Hồi thượng hạng tháng sinh nhật"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-[var(--gold)] shrink-0" />
-                  <span>Ưu tiên xếp bàn phòng riêng Tatami sang trọng</span>
+                  <span>
+                    {lang === "ja"
+                      ? "高級個室・畳席の優先リザーブ"
+                      : lang === "en"
+                      ? "Priority seating in luxury Tatami VIP private rooms"
+                      : "Ưu tiên xếp bàn phòng riêng Tatami sang trọng"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-[var(--gold)] shrink-0" />
-                  <span>Trải nghiệm trước các món mới trong mùa Omakase</span>
+                  <span>
+                    {lang === "ja"
+                      ? "季節のおまかせ新作メニューをいち早くテイスティング"
+                      : lang === "en"
+                      ? "Early tasting privileges for seasonal Omakase creations"
+                      : "Trải nghiệm trước các món mới trong mùa Omakase"}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -670,33 +973,57 @@ export default function RewardsPage() {
                   <span className="text-[20px]">💎</span>
                   <div>
                     <h4 className="font-display text-[15px] font-bold text-cyan-300">
-                      Hạng Bạch Kim (Platinum)
+                      {lang === "ja" ? "プラチナ会員 (Platinum)" : lang === "en" ? "Platinum Member" : "Hạng Bạch Kim (Platinum)"}
                     </h4>
                     <span className="text-[11px] text-[var(--faint)]">
-                      Từ 2.000 điểm trở lên
+                      {lang === "ja" ? "2,000 ポイント以上" : lang === "en" ? "2,000 points and above" : "Từ 2.000 điểm trở lên"}
                     </span>
                   </div>
                 </div>
                 <span className="rounded-full bg-cyan-500/15 px-2.5 py-0.5 text-[11px] font-bold text-cyan-300 border border-cyan-500/30">
-                  Tích 12%
+                  {lang === "ja" ? "12%還元" : lang === "en" ? "Earn 12%" : "Tích 12%"}
                 </span>
               </div>
               <ul className="mt-3 space-y-1.5 text-[12px] text-[var(--muted)] border-t border-[var(--line)] pt-3">
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-cyan-400 shrink-0" />
-                  <span>Tích luỹ tối đa 12% giá trị trên mọi hoá đơn</span>
+                  <span>
+                    {lang === "ja"
+                      ? "最大12%の最高還元率をすべての伝票に適用"
+                      : lang === "en"
+                      ? "Maximum 12% loyalty return on every transaction"
+                      : "Tích luỹ tối đa 12% giá trị trên mọi hoá đơn"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-cyan-400 shrink-0" />
-                  <span>Miễn phí 100% phụ phí phòng VIP & Tatami riêng tư</span>
+                  <span>
+                    {lang === "ja"
+                      ? "VIP個室および畳席の利用料が100%完全無料"
+                      : lang === "en"
+                      ? "100% waiver of VIP room & private Tatami room surcharges"
+                      : "Miễn phí 100% phụ phí phòng VIP & Tatami riêng tư"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-cyan-400 shrink-0" />
-                  <span>Tặng 1 chai Sake vảy vàng 720ml vào ngày sinh nhật</span>
+                  <span>
+                    {lang === "ja"
+                      ? "お誕生日に金箔入り特撰日本酒 720ml を1本進呈"
+                      : lang === "en"
+                      ? "Gift 1 bottle of 24K Gold Flake Sake 720ml on birthday"
+                      : "Tặng 1 chai Sake vảy vàng 720ml vào ngày sinh nhật"}
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <IconCheck size={14} className="text-cyan-400 shrink-0" />
-                  <span>Đầu bếp trưởng Omakase thiết kế thực đơn riêng</span>
+                  <span>
+                    {lang === "ja"
+                      ? "総料理長によるオーダーメイド専用コースの設計"
+                      : lang === "en"
+                      ? "Exclusive custom-designed menu crafted by Head Chef"
+                      : "Đầu bếp trưởng Omakase thiết kế thực đơn riêng"}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -707,7 +1034,11 @@ export default function RewardsPage() {
         {activeTab === "quests" && (
           <div className="space-y-3">
             <h3 className="font-display text-[15px] font-bold text-[var(--washi)]">
-              Nhiệm Vụ Kiếm Thêm Điểm Thưởng
+              {lang === "ja"
+                ? "ポイント獲得ミッション"
+                : lang === "en"
+                ? "Earn More Points"
+                : "Nhiệm Vụ Kiếm Thêm Điểm Thưởng"}
             </h3>
 
             <div className="space-y-2.5">
@@ -724,7 +1055,7 @@ export default function RewardsPage() {
                           {q.title}
                         </h4>
                         <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.2 text-[9.5px] font-bold text-emerald-400">
-                          +{q.points}đ
+                          +{q.points} {t.rewards.pts}
                         </span>
                       </div>
                       <p className="text-[11.5px] text-[var(--muted)] mt-0.5">
@@ -742,7 +1073,7 @@ export default function RewardsPage() {
                         : "bg-[var(--shu)] text-white shadow-sm hover:brightness-110"
                     }`}
                   >
-                    {q.completed ? "Đã nhận" : q.actionText}
+                    {q.completed ? t.rewards.claimed : q.actionText}
                   </button>
                 </div>
               ))}
@@ -754,14 +1085,20 @@ export default function RewardsPage() {
         {activeTab === "history" && (
           <div className="space-y-3">
             <h3 className="font-display text-[15px] font-bold text-[var(--washi)]">
-              Lịch Sử Biến Động Điểm
+              {t.rewards.historyTitle}
             </h3>
 
             {history.length === 0 ? (
               <EmptyState
                 kanji="点"
-                title="Chưa có giao dịch điểm"
-                hint="Hãy dùng bữa tại Miyako hoặc mua thịt Butcher để bắt đầu tích luỹ điểm thưởng nhé."
+                title={t.rewards.historyEmpty}
+                hint={
+                  lang === "ja"
+                    ? "宮古でのお食事や精肉のご注文でポイントを獲得しましょう。"
+                    : lang === "en"
+                    ? "Dine at Miyako or buy Butcher meats to start accumulating points."
+                    : "Hãy dùng bữa tại Miyako hoặc mua thịt Butcher để bắt đầu tích luỹ điểm thưởng nhé."
+                }
               />
             ) : (
               <div className="divide-y divide-[var(--line)] rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] shadow-sm">
@@ -789,7 +1126,7 @@ export default function RewardsPage() {
                           isPositive ? "text-emerald-400" : "text-amber-500"
                         }`}
                       >
-                        {isPositive ? `+${item.points}` : `${item.points}`}đ
+                        {isPositive ? `+${item.points}` : `${item.points}`} {t.rewards.pts}
                       </div>
                     </div>
                   );
@@ -804,12 +1141,17 @@ export default function RewardsPage() {
       <Sheet
         open={qrSheetOpen}
         onClose={() => setQrSheetOpen(false)}
-        title="Mã Tích Điểm Tại Quầy"
+        title={lang === "ja" ? "お会計時QR・バーコード" : lang === "en" ? "Counter Loyalty Code" : "Mã Tích Điểm Tại Quầy"}
       >
         <div className="p-4 text-center space-y-4">
           <div className="text-[12.5px] text-[var(--muted)]">
-            Đưa mã này cho nhân viên thu ngân khi thanh toán để được tích{" "}
-            <b className="text-[var(--gold)]">{tierInfo.rateText}</b> vào tài khoản.
+            {lang === "ja"
+              ? "お会計時にレジスタッフにご提示ください。"
+              : lang === "en"
+              ? "Present this code to the cashier at checkout to earn "
+              : "Đưa mã này cho nhân viên thu ngân khi thanh toán để được tích "}
+            <b className="text-[var(--gold)]">{tierInfo.rateText}</b>{" "}
+            {lang === "ja" ? "が付与されます。" : lang === "en" ? "into your account." : "vào tài khoản."}
           </div>
 
           {/* Hộp mã QR & Barcode */}
@@ -838,15 +1180,19 @@ export default function RewardsPage() {
           </div>
 
           <div className="text-[11.5px] text-[var(--faint)]">
-            Thành viên: <b className="text-[var(--washi)]">{user?.name ?? "Quý Khách"}</b> · Điểm hiện có:{" "}
-            <b className="text-[var(--gold)]">{formatNumber(points)} điểm</b>
+            {lang === "ja" ? "会員名: " : lang === "en" ? "Member: " : "Thành viên: "}
+            <b className="text-[var(--washi)]">{user?.name ?? (lang === "ja" ? "お客様" : lang === "en" ? "Guest" : "Quý Khách")}</b> ·{" "}
+            {lang === "ja" ? "保有ポイント: " : lang === "en" ? "Points: " : "Điểm hiện có: "}
+            <b className="text-[var(--gold)]">
+              {formatNumber(points)} {t.rewards.pts}
+            </b>
           </div>
 
           <button
             onClick={() => setQrSheetOpen(false)}
             className="w-full h-11 rounded-full bg-[var(--surface-3)] font-bold text-[13px] text-[var(--washi)] active:scale-98 transition-transform border border-[var(--line)]"
           >
-            Đóng
+            {t.rewards.close}
           </button>
         </div>
       </Sheet>
@@ -859,7 +1205,7 @@ export default function RewardsPage() {
           setRedeemSuccess(false);
           setRedeemedCode(null);
         }}
-        title={redeemSuccess ? "Đổi Quà Thành Công!" : "Xác Nhận Đổi Quà"}
+        title={redeemSuccess ? t.rewards.redeemSuccess : t.rewards.redeemTitle}
       >
         {selectedGift && (
           <div className="space-y-4 text-center">
@@ -879,15 +1225,19 @@ export default function RewardsPage() {
 
                 <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3 text-[12.5px]">
                   <div className="flex justify-between py-1">
-                    <span className="text-[var(--muted)]">Điểm cần dùng:</span>
+                    <span className="text-[var(--muted)]">
+                      {lang === "ja" ? "必要ポイント:" : lang === "en" ? "Points required:" : "Điểm cần dùng:"}
+                    </span>
                     <b className="text-[var(--gold)] font-display text-[14px]">
-                      {formatNumber(selectedGift.pointsCost)} điểm
+                      {formatNumber(selectedGift.pointsCost)} {t.rewards.pts}
                     </b>
                   </div>
                   <div className="flex justify-between py-1 border-t border-[var(--line)]">
-                    <span className="text-[var(--muted)]">Điểm sau khi đổi:</span>
+                    <span className="text-[var(--muted)]">
+                      {lang === "ja" ? "交換後の残高:" : lang === "en" ? "Balance after:" : "Điểm sau khi đổi:"}
+                    </span>
                     <b className="text-[var(--washi)]">
-                      {formatNumber(Math.max(0, points - selectedGift.pointsCost))} điểm
+                      {formatNumber(Math.max(0, points - selectedGift.pointsCost))} {t.rewards.pts}
                     </b>
                   </div>
                 </div>
@@ -897,13 +1247,13 @@ export default function RewardsPage() {
                     onClick={() => setSelectedGift(null)}
                     className="flex-1 h-10 rounded-full border border-[var(--line)] bg-[var(--surface-2)] font-semibold text-[13px] text-[var(--muted)] active:scale-95"
                   >
-                    Huỷ
+                    {t.rewards.cancel}
                   </button>
                   <button
                     onClick={handleConfirmRedeem}
                     className="flex-1 h-10 rounded-full bg-[var(--shu)] font-bold text-[13px] text-white shadow-md active:scale-95 hover:brightness-110"
                   >
-                    Xác nhận đổi
+                    {t.rewards.confirmRedeem}
                   </button>
                 </div>
               </>
@@ -914,23 +1264,27 @@ export default function RewardsPage() {
                 </div>
                 <div>
                   <h3 className="font-display text-[16px] font-bold text-[var(--washi)]">
-                    Chúc mừng bạn đã đổi thành công!
+                    {t.rewards.redeemSuccess}
                   </h3>
                   <p className="mt-1 text-[12px] text-[var(--muted)]">
-                    Mã ưu đãi đã được lưu vào ví voucher của bạn.
+                    {lang === "ja"
+                      ? "優待コードがウォレットに保存されました。"
+                      : lang === "en"
+                      ? "The voucher code has been added to your wallet."
+                      : "Mã ưu đãi đã được lưu vào ví voucher của bạn."}
                   </p>
                 </div>
 
                 {/* Mã Voucher */}
                 <div className="rounded-xl border-2 border-dashed border-[var(--gold)] bg-[var(--surface-2)] p-3.5">
                   <div className="text-[11px] uppercase tracking-wider text-[var(--faint)]">
-                    Mã Sử Dụng
+                    {t.rewards.yourVoucherCode}
                   </div>
                   <div className="font-mono text-[20px] font-extrabold tracking-widest text-[var(--gold)] mt-0.5">
                     {redeemedCode}
                   </div>
                   <div className="text-[10.5px] text-[var(--muted)] mt-1">
-                    Đưa mã này cho nhân viên hoặc nhập khi đặt hàng
+                    {t.rewards.useCodeHint}
                   </div>
                 </div>
 
@@ -943,7 +1297,7 @@ export default function RewardsPage() {
                   }}
                   className="w-full h-11 rounded-full bg-[var(--shu)] font-bold text-[13px] text-white shadow-md active:scale-95"
                 >
-                  Sử dụng ngay tại Thực Đơn
+                  {t.rewards.useAtMenu}
                 </button>
               </>
             )}

@@ -178,10 +178,10 @@ export default function RewardsPage() {
 
     const code = verifyCode.trim().toUpperCase();
 
-    // Tìm trong bảng voucher_redemptions
+    // Tìm trong bảng voucher_redemptions kèm thông tin khách và quà tặng
     const { data, error } = await supabase
       .from("voucher_redemptions")
-      .select("*")
+      .select("*, customers(name, phone), reward_gifts(title, worth_text)")
       .eq("code", code)
       .maybeSingle();
 
@@ -204,6 +204,7 @@ export default function RewardsPage() {
       }
     }
   };
+
 
   // Đánh dấu mã đã sử dụng
   const handleApplyRedemption = async () => {
@@ -509,6 +510,22 @@ export default function RewardsPage() {
                 </span>
               </div>
               <div className="flex justify-between text-[13px]">
+                <span className="text-muted">Phần quà:</span>
+                <span className="font-semibold text-washi">
+                  {(verifiedRedemption as any).reward_gifts?.title || "Ưu đãi đổi điểm"}
+                  {(verifiedRedemption as any).reward_gifts?.worth_text ? ` - ${(verifiedRedemption as any).reward_gifts?.worth_text}` : ""}
+                </span>
+              </div>
+              {(verifiedRedemption as any).customers?.name && (
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-muted">Khách hàng:</span>
+                  <span className="text-washi">
+                    {(verifiedRedemption as any).customers?.name}
+                    {(verifiedRedemption as any).customers?.phone ? ` (${(verifiedRedemption as any).customers?.phone})` : ""}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between text-[13px]">
                 <span className="text-muted">Thời gian đổi:</span>
                 <span>{dateTimeLabel(verifiedRedemption.created_at)}</span>
               </div>
@@ -517,6 +534,7 @@ export default function RewardsPage() {
               </Button>
             </div>
           )}
+
         </Card>
       )}
 

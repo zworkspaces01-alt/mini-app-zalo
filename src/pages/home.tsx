@@ -44,6 +44,7 @@ import {
 import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import { useScrollSearchBar } from "@/hooks/use-scroll-search-bar";
 import { useLang, useT, useTr } from "@/i18n";
 import { dishFromPrice } from "@/data/menu";
 import { callHotline, chatWithOA, haptic, openMap, scanTableQR } from "@/services/zalo";
@@ -59,44 +60,125 @@ import {
   img,
 } from "@/utils/images";
 
+interface LocalizedString {
+  vi: string;
+  en: string;
+  ja: string;
+}
+
 /* ─── Danh sách Banner Carousel quảng cáo chuẩn TMĐT ─── */
-const BANNERS = [
+interface RawBanner {
+  id: string;
+  tag: LocalizedString;
+  title: LocalizedString;
+  sub: LocalizedString;
+  cta: LocalizedString;
+  route: string;
+  img: string;
+  color: string;
+}
+
+const RAW_BANNERS: RawBanner[] = [
   {
     id: "omakase",
-    tag: "OMAKASE VIP",
-    title: "Tiệc Bếp Trưởng Omakase",
-    sub: "Trải nghiệm ẩm thực Kaiseki đỉnh cao tại quầy Bar riêng tư 12 ghế",
-    cta: "Xem suất tiệc",
+    tag: {
+      vi: "OMAKASE VIP",
+      en: "VIP OMAKASE",
+      ja: "VIPおまかせ",
+    },
+    title: {
+      vi: "Tiệc Bếp Trưởng Omakase",
+      en: "Master Chef Omakase Feast",
+      ja: "総料理長 おまかせコース",
+    },
+    sub: {
+      vi: "Trải nghiệm ẩm thực Kaiseki đỉnh cao tại quầy Bar riêng tư 12 ghế",
+      en: "Exquisite Kaiseki dining at an exclusive private 12-seat counter",
+      ja: "限定12席の檜カウンターで味わう至高の会席・江戸前料理",
+    },
+    cta: {
+      vi: "Xem suất tiệc",
+      en: "Explore sets",
+      ja: "コースを見る",
+    },
     route: "/omakase",
     img: heroOmakase,
     color: "from-black/80 via-black/40 to-transparent",
   },
   {
     id: "butcher",
-    tag: "MIYAKO BUTCHER",
-    title: "Thịt Bò Wagyu A5 Tươi",
-    sub: "Sơ chế cắt theo yêu cầu: Steak, Lẩu Shabu, Nướng Yakiniku",
-    cta: "Mua mang về",
+    tag: {
+      vi: "MIYAKO BUTCHER",
+      en: "MIYAKO BUTCHER",
+      ja: "宮古 精肉店",
+    },
+    title: {
+      vi: "Thịt Bò Wagyu A5 Tươi",
+      en: "Fresh Japanese A5 Wagyu",
+      ja: "切り立て A5ランク黒毛和牛",
+    },
+    sub: {
+      vi: "Sơ chế cắt theo yêu cầu: Steak, Lẩu Shabu, Nướng Yakiniku",
+      en: "Custom-cut to order: Steak, Shabu Hotpot, Yakiniku Grill",
+      ja: "ステーキ・しゃぶしゃぶ・焼肉用にお好みの厚さでカット",
+    },
+    cta: {
+      vi: "Mua mang về",
+      en: "Shop meats",
+      ja: "精肉を見る",
+    },
     route: "/butcher",
     img: heroWagyu,
     color: "from-[#881008]/85 via-black/50 to-transparent",
   },
   {
     id: "hotpot",
-    tag: "SET LẨU TẠI GIA",
-    title: "Lẩu Shabu & Sukiyaki",
-    sub: "Tặng kèm nước dùng hầm 12h, rau nấm và sốt mè rang Nhật Bản",
-    cta: "Đặt giao ngay",
+    tag: {
+      vi: "SET LẨU TẠI GIA",
+      en: "HOME HOTPOT SET",
+      ja: "おうち鍋セット",
+    },
+    title: {
+      vi: "Lẩu Shabu & Sukiyaki",
+      en: "Shabu & Sukiyaki Sets",
+      ja: "特選しゃぶしゃぶ＆すき焼き",
+    },
+    sub: {
+      vi: "Tặng kèm nước dùng hầm 12h, rau nấm và sốt mè rang Nhật Bản",
+      en: "Free 12h slow-simmered broth, fresh greens, and sesame sauce",
+      ja: "12時間煮込み特製出汁・旬の野菜・特製胡麻だれ付き",
+    },
+    cta: {
+      vi: "Đặt giao ngay",
+      en: "Order delivery",
+      ja: "今すぐ注文",
+    },
     route: "/menu",
     img: heroHotpot,
     color: "from-black/80 via-black/40 to-transparent",
   },
   {
     id: "sushi",
-    tag: "TOYOSU DAILY",
-    title: "Sashimi Tươi Sống Mỗi Ngày",
-    sub: "Cá ngừ đại dương Hon Maguro & bụng cá hồi Na Uy thượng hạng",
-    cta: "Khám phá menu",
+    tag: {
+      vi: "TOYOSU DAILY",
+      en: "TOYOSU DAILY",
+      ja: "豊洲市場より毎日空輸",
+    },
+    title: {
+      vi: "Sashimi Tươi Sống Mỗi Ngày",
+      en: "Fresh Daily Sashimi",
+      ja: "朝獲れ 鮮魚のお造り",
+    },
+    sub: {
+      vi: "Cá ngừ đại dương Hon Maguro & bụng cá hồi Na Uy thượng hạng",
+      en: "Prime Pacific bluefin Hon-Maguro & fresh Norwegian salmon belly",
+      ja: "本鮪大トロとノルウェー産最高級サーモンの贅沢盛り合わせ",
+    },
+    cta: {
+      vi: "Khám phá menu",
+      en: "Explore menu",
+      ja: "メニューを見る",
+    },
     route: "/menu",
     img: heroSushi,
     color: "from-black/80 via-black/40 to-transparent",
@@ -104,25 +186,65 @@ const BANNERS = [
 ];
 
 /* ─── Danh sách từ khoá placeholder chuyển động liên tục ─── */
-const SEARCH_PLACEHOLDERS = [
-  "Tìm Bò Wagyu A5 nướng than hoa...",
-  "Tìm Sashimi Cá Hồi Na Uy tươi sống...",
-  "Tìm Tiệc Bếp Trưởng Omakase 12 ghế...",
-  "Tìm Set Lẩu Shabu Shabu & Sukiyaki...",
-  "Tìm Cơm Lươn Nhật sốt Kabayaki...",
-  "Tìm Thịt Bò Tươi Butcher cắt lát...",
-  "Tìm Sushi bụng cá ngừ Otoro béo ngậy...",
-];
+const HOME_SEARCH_PLACEHOLDERS = {
+  vi: [
+    "Tìm Bò Wagyu A5 nướng than hoa...",
+    "Tìm Sashimi Cá Hồi Na Uy tươi sống...",
+    "Tìm Tiệc Bếp Trưởng Omakase 12 ghế...",
+    "Tìm Set Lẩu Shabu Shabu & Sukiyaki...",
+    "Tìm Cơm Lươn Nhật sốt Kabayaki...",
+    "Tìm Thịt Bò Tươi Butcher cắt lát...",
+    "Tìm Sushi bụng cá ngừ Otoro béo ngậy...",
+  ],
+  en: [
+    "Search Charcoal Grilled A5 Wagyu...",
+    "Search Fresh Norwegian Salmon...",
+    "Search Master Chef Omakase 12 seats...",
+    "Search Shabu Shabu & Sukiyaki Boxes...",
+    "Search Japanese Eel Donburi...",
+    "Search Butcher Fresh Sliced Beef...",
+    "Search Melting Otoro Bluefin Tuna...",
+  ],
+  ja: [
+    "炭火焼きA5和牛を探す...",
+    "新鮮な生サーモン刺身を探す...",
+    "板前おまかせコース12席を探す...",
+    "しゃぶしゃぶ＆すき焼きセットを探す...",
+    "特製うな重・蒲焼きを探す...",
+    "切り立て和牛精肉を探す...",
+    "とろける本鮪大トロを探す...",
+  ],
+};
 
 /* ─── Tab phân loại feed món ăn TMĐT ─── */
 type FeedTab = "all" | "sashimi" | "wagyu" | "hotpot" | "butcher";
 
-const FEED_TABS: { id: FeedTab; label: string; icon: React.ReactNode }[] = [
-  { id: "all", label: "Gợi ý hôm nay", icon: <Icon3DFire size={16} /> },
-  { id: "sashimi", label: "Sashimi & Sushi", icon: <Icon3DSushi size={16} /> },
-  { id: "wagyu", label: "Wagyu Thượng Hạng", icon: <Icon3DMeat size={16} /> },
-  { id: "hotpot", label: "Lẩu & Món Nóng", icon: <Icon3DHotpot size={16} /> },
-  { id: "butcher", label: "Thịt Bò Mang Về", icon: <Icon3DTakeaway size={16} /> },
+const RAW_FEED_TABS: { id: FeedTab; label: LocalizedString; icon: React.ReactNode }[] = [
+  {
+    id: "all",
+    label: { vi: "Gợi ý hôm nay", en: "Chef's Picks", ja: "本日のおすすめ" },
+    icon: <Icon3DFire size={16} />,
+  },
+  {
+    id: "sashimi",
+    label: { vi: "Sashimi & Sushi", en: "Sashimi & Sushi", ja: "刺身・寿司" },
+    icon: <Icon3DSushi size={16} />,
+  },
+  {
+    id: "wagyu",
+    label: { vi: "Wagyu Thượng Hạng", en: "Premium Wagyu", ja: "特選和牛" },
+    icon: <Icon3DMeat size={16} />,
+  },
+  {
+    id: "hotpot",
+    label: { vi: "Lẩu & Món Nóng", en: "Hotpot & Warm", ja: "鍋・温物" },
+    icon: <Icon3DHotpot size={16} />,
+  },
+  {
+    id: "butcher",
+    label: { vi: "Thịt Bò Mang Về", en: "Takeaway Meats", ja: "精肉テイクアウト" },
+    icon: <Icon3DTakeaway size={16} />,
+  },
 ];
 
 export default function HomePage() {
@@ -141,20 +263,48 @@ export default function HomePage() {
   const [openDish, setOpenDish] = useState<Dish | null>(null);
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { searchContainerStyle, inputProps, onScroll } = useScrollSearchBar({
+    activeQuery: searchQuery,
+  });
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
+
+  const localizedBanners = useMemo(() => {
+    return RAW_BANNERS.map((b) => ({
+      id: b.id,
+      tag: b.tag[lang] ?? b.tag.vi,
+      title: b.title[lang] ?? b.title.vi,
+      sub: b.sub[lang] ?? b.sub.vi,
+      cta: b.cta[lang] ?? b.cta.vi,
+      route: b.route,
+      img: b.img,
+      color: b.color,
+    }));
+  }, [lang]);
+
+  const currentPlaceholders = useMemo(() => {
+    return HOME_SEARCH_PLACEHOLDERS[lang] ?? HOME_SEARCH_PLACEHOLDERS.vi;
+  }, [lang]);
+
+  const feedTabs = useMemo(() => {
+    return RAW_FEED_TABS.map((tb) => ({
+      id: tb.id,
+      label: tb.label[lang] ?? tb.label.vi,
+      icon: tb.icon,
+    }));
+  }, [lang]);
 
   /* Chuyển động thay đổi placeholder liên tục mỗi 3.2 giây */
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderFade(false);
       setTimeout(() => {
-        setPlaceholderIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length);
+        setPlaceholderIndex((prev) => (prev + 1) % currentPlaceholders.length);
         setPlaceholderFade(true);
       }, 250);
     }, 3200);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPlaceholders.length]);
 
   /* Kết quả tìm kiếm trực tiếp trên Trang Chủ */
   const liveSearchResults = useMemo(() => {
@@ -170,10 +320,10 @@ export default function HomePage() {
   /* Tự động xoay vòng Banner sau mỗi 4.5 giây */
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % BANNERS.length);
+      setActiveSlide((prev) => (prev + 1) % localizedBanners.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [localizedBanners.length]);
 
   /* Quét QR mã bàn */
   const handleScan = async () => {
@@ -220,13 +370,12 @@ export default function HomePage() {
     if (feedTab === "butcher") {
       return dishes.filter((d) => d.categoryId === "butcher");
     }
-    // "all": món nổi bật
-    return dishes.slice(0, 14);
+    return dishes;
   }, [dishes, feedTab]);
 
   return (
-    <Screen name="home" pad={false}>
-      {/* ─── 1. THANH ĐẦU TRANG & TÌM KIẾM CHUẨN TMĐT ─── */}
+    <Screen name="home" pad={false} onScroll={onScroll}>
+      {/* ─── 1. THANH TÌM KIẾM TMĐT TRÊN CÙNG (STICKY HEADER) ─── */}
       <header
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-1.5 shadow-sm transition-colors"
         style={{
@@ -252,7 +401,7 @@ export default function HomePage() {
 
             {/* Nút giỏ hàng có badge đỏ */}
             <button
-              aria-label="Giỏ hàng"
+              aria-label="Cart"
               onClick={() => {
                 haptic("light");
                 navigate("/cart");
@@ -272,29 +421,33 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động */}
-        <div className="relative mt-1.5">
+        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động (ẩn khi kéo xuống, hiện khi dừng lại) */}
+        <div className="relative" style={searchContainerStyle}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              const term =
-                searchQuery.trim() ||
-                SEARCH_PLACEHOLDERS[placeholderIndex].replace(/^Tìm\s+/, "").replace(/\.\.\.$/, "");
+              if (!searchQuery.trim()) {
+                const term = currentPlaceholders[placeholderIndex]
+                  .replace(/^(Tìm|Search)\s+/, "")
+                  .replace(/\s*(を探す)?\.\.\.$/, "");
+                setSearchQuery(term);
+              }
               haptic("light");
-              navigate(`/menu?q=${encodeURIComponent(term)}`);
             }}
             className="flex items-center gap-2"
           >
             {/* Ô tìm kiếm bo tròn 50% */}
             <div className="flex flex-1 items-center gap-2 h-[36px] rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-3.5 transition-all focus-within:border-[var(--shu)] focus-within:ring-1 focus-within:ring-[var(--shu)]/30">
               <IconSearch size={16} className="text-[var(--shu)] shrink-0" />
-              
+
               {/* Input với placeholder chuyển động mượt mà */}
               <div className="relative flex-1 flex items-center h-full overflow-hidden">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={inputProps.onFocus}
+                  onBlur={inputProps.onBlur}
                   className="relative z-10 w-full bg-transparent text-[13px] text-[var(--washi)] outline-none border-none"
                 />
                 {!searchQuery && (
@@ -306,7 +459,7 @@ export default function HomePage() {
                     }`}
                   >
                     <span className="truncate">
-                      {SEARCH_PLACEHOLDERS[placeholderIndex]}
+                      {currentPlaceholders[placeholderIndex]}
                     </span>
                   </div>
                 )}
@@ -315,7 +468,7 @@ export default function HomePage() {
               {searchQuery && (
                 <button
                   type="button"
-                  aria-label="Xóa tìm kiếm"
+                  aria-label="Clear"
                   onClick={() => {
                     haptic("light");
                     setSearchQuery("");
@@ -332,7 +485,7 @@ export default function HomePage() {
               type="submit"
               className="h-[36px] px-3.5 rounded-full bg-[var(--shu)] text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform shrink-0 flex items-center justify-center z-20"
             >
-              Tìm kiếm
+              {lang === "ja" ? "検索" : lang === "en" ? "Search" : "Tìm kiếm"}
             </button>
           </form>
 
@@ -341,20 +494,28 @@ export default function HomePage() {
             <div className="absolute left-0 right-0 top-full mt-1.5 max-h-[360px] overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-[var(--line)] text-[11.5px] text-[var(--muted)]">
                 <span>
-                  Tìm thấy <b className="text-[var(--shu)]">{liveSearchResults.length}</b> món cho "{searchQuery}"
+                  {lang === "ja"
+                    ? `「${searchQuery}」の検索結果 ${liveSearchResults.length} 件`
+                    : lang === "en"
+                    ? `Found ${liveSearchResults.length} dishes for "${searchQuery}"`
+                    : `Tìm thấy ${liveSearchResults.length} món cho "${searchQuery}"`}
                 </span>
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
                   className="text-[11px] text-[var(--shu)] hover:underline font-medium"
                 >
-                  Đóng
+                  {t.common.close}
                 </button>
               </div>
 
               {liveSearchResults.length === 0 ? (
                 <div className="py-5 text-center text-[12.5px] text-[var(--muted)]">
-                  Không tìm thấy món ăn phù hợp với "{searchQuery}"
+                  {lang === "ja"
+                    ? `「${searchQuery}」に一致するお料理が見つかりませんでした`
+                    : lang === "en"
+                    ? `No dishes found matching "${searchQuery}"`
+                    : `Không tìm thấy món ăn phù hợp với "${searchQuery}"`}
                 </div>
               ) : (
                 <div className="divide-y divide-[var(--line)]">
@@ -399,7 +560,7 @@ export default function HomePage() {
                           />
                           <button
                             type="button"
-                            aria-label="Thêm vào giỏ"
+                            aria-label="Add to cart"
                             onClick={(e) => {
                               e.stopPropagation();
                               haptic("light");
@@ -423,7 +584,11 @@ export default function HomePage() {
                       }}
                       className="w-full pt-2 pb-1 text-center text-[11.5px] font-bold text-[var(--shu)] hover:underline block"
                     >
-                      Xem tất cả {liveSearchResults.length} món trên Thực đơn ➔
+                      {lang === "ja"
+                        ? `お品書きで全 ${liveSearchResults.length} 品を見る ➔`
+                        : lang === "en"
+                        ? `View all ${liveSearchResults.length} dishes on Menu ➔`
+                        : `Xem tất cả ${liveSearchResults.length} món trên Thực đơn ➔`}
                     </button>
                   )}
                 </div>
@@ -440,7 +605,7 @@ export default function HomePage() {
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${activeSlide * 100}%)` }}
           >
-            {BANNERS.map((b) => (
+            {localizedBanners.map((b) => (
               <div
                 key={b.id}
                 onClick={() => {
@@ -478,7 +643,7 @@ export default function HomePage() {
 
           {/* Dots chỉ số slide */}
           <div className="absolute bottom-2 right-2.5 flex items-center gap-1.5 z-10">
-            {BANNERS.map((_, idx) => (
+            {localizedBanners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={(e) => {
@@ -496,8 +661,8 @@ export default function HomePage() {
 
       {/* ─── 3. KHỐI TIỆN ÍCH & DANH MỤC THỐNG NHẤT (SINGLE BLOCK) ─── */}
       <section className="mt-4 px-3">
-        <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2.5 shadow-sm">
-          <div className="grid grid-cols-4 gap-y-2 gap-x-1">
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 shadow-sm">
+          <div className="grid grid-cols-4 gap-y-3 gap-x-1">
             {/* 1. Menu */}
             <button
               onClick={() => {
@@ -506,11 +671,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DMenu size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DMenu size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Menu
+                {lang === "ja" ? "お品書き" : "Menu"}
               </span>
             </button>
 
@@ -522,11 +687,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DOmakase size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DOmakase size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Omakase
+                {lang === "ja" ? "おまかせ" : "Omakase"}
               </span>
             </button>
 
@@ -538,11 +703,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DButcher size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DButcher size={54} />
               </div>
               <span className="text-[11px] font-semibold text-[var(--shu)] leading-tight text-center truncate w-full">
-                Thịt Tươi
+                {lang === "ja" ? "和牛精肉" : lang === "en" ? "Butcher" : "Thịt Tươi"}
               </span>
             </button>
 
@@ -554,11 +719,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DBooking size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DBooking size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Đặt Bàn
+                {lang === "ja" ? "ご予約" : lang === "en" ? "Booking" : "Đặt Bàn"}
               </span>
             </button>
 
@@ -570,11 +735,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DPoints size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DPoints size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Tích Điểm
+                {lang === "ja" ? "ポイント" : lang === "en" ? "Rewards" : "Tích Điểm"}
               </span>
             </button>
 
@@ -586,11 +751,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DVoucher size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DVoucher size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Voucher
+                {lang === "ja" ? "優待券" : "Voucher"}
               </span>
             </button>
 
@@ -602,8 +767,8 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DHotline size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DHotline size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
                 Hotline
@@ -618,11 +783,11 @@ export default function HomePage() {
               }}
               className="group flex flex-col items-center gap-1 transition-transform active:scale-95"
             >
-              <div className="flex h-10 w-10 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <Icon3DMapPin size={36} />
+              <div className="flex h-14 w-14 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <Icon3DMapPin size={54} />
               </div>
               <span className="text-[11px] font-medium text-[var(--washi)] leading-tight text-center truncate w-full">
-                Maps
+                {lang === "ja" ? "店舗位置" : lang === "en" ? "Map" : "Bản đồ"}
               </span>
             </button>
           </div>
@@ -646,7 +811,7 @@ export default function HomePage() {
               </span>
             </span>
             <span className="rounded-lg bg-[var(--shu)] px-2 py-0.5 text-[10.5px] font-bold text-white">
-              Gọi món ➔
+              {t.home.order} ➔
             </span>
           </button>
         </section>
@@ -658,14 +823,18 @@ export default function HomePage() {
           <div className="flex items-center gap-1.5">
             <Icon3DFire size={20} className="shrink-0" />
             <h2 className="font-display text-[15.5px] font-bold text-[var(--washi)]">
-              Món Bán Chạy & Ưu Đãi Hôm Nay
+              {lang === "ja"
+                ? "人気メニュー＆本日の特選"
+                : lang === "en"
+                ? "Best Sellers & Today's Deals"
+                : "Món Bán Chạy & Ưu Đãi Hôm Nay"}
             </h2>
           </div>
           <button
             onClick={() => navigate("/menu")}
             className="flex items-center gap-0.5 text-[11.5px] font-semibold text-[var(--shu)]"
           >
-            Tất cả <IconChevronRight size={13} />
+            {t.common.all} <IconChevronRight size={13} />
           </button>
         </div>
 
@@ -700,7 +869,9 @@ export default function HomePage() {
 
                   {/* Tag giảm giá / bán chạy */}
                   <span className="absolute left-1.5 top-1.5 rounded-md bg-[var(--shu)] px-1.5 py-0.5 text-[8.5px] font-bold text-white shadow-sm">
-                    {index % 2 === 0 ? "HOT DEAL" : "BÁN CHẠY"}
+                    {index % 2 === 0
+                      ? (lang === "ja" ? "人気" : "HOT")
+                      : (lang === "ja" ? "名物" : "BEST")}
                   </span>
 
                   {/* Nút tim yêu thích */}
@@ -736,7 +907,7 @@ export default function HomePage() {
                     </div>
                     {/* Nút cộng vào giỏ */}
                     <button
-                      aria-label="Thêm món"
+                      aria-label="Add to cart"
                       onClick={(e) => {
                         e.stopPropagation();
                         haptic("light");
@@ -770,14 +941,22 @@ export default function HomePage() {
                   <Icon3DMeat size={13} /> MIYAKO BUTCHER
                 </span>
                 <span className="text-[9.5px] font-medium text-[var(--muted)]">
-                  Giao nhanh 45p
+                  {lang === "ja" ? "45分スピード配達" : lang === "en" ? "45-min delivery" : "Giao nhanh 45p"}
                 </span>
               </div>
               <h3 className="mt-1 font-display text-[15px] font-bold text-[var(--washi)]">
-                Thịt Bò Wagyu Nhật A5 Cắt Theo Yêu Cầu
+                {lang === "ja"
+                  ? "ご希望に合わせてカットする日本産A5和牛"
+                  : lang === "en"
+                  ? "Custom-Cut Japanese A5 Wagyu Beef"
+                  : "Thịt Bò Wagyu Nhật A5 Cắt Theo Yêu Cầu"}
               </h3>
               <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--muted)]">
-                Thịt tươi hút chân không kèm đá gel giữ nhiệt. Tùy chọn cắt lát Lẩu (1.5mm), Nướng (3.5mm), Steak (2cm).
+                {lang === "ja"
+                  ? "保冷剤入り真空パック包装。しゃぶしゃぶ(1.5mm)、焼肉(3.5mm)、ステーキ(2cm)など無料カット。"
+                  : lang === "en"
+                  ? "Vacuum packed with thermal ice gel. Custom slicing for Shabu (1.5mm), Yakiniku (3.5mm), Steak (2cm)."
+                  : "Thịt tươi hút chân không kèm đá gel giữ nhiệt. Tùy chọn cắt lát Lẩu (1.5mm), Nướng (3.5mm), Steak (2cm)."}
               </p>
             </div>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--gold)]/30 bg-[var(--gold-dim)] p-1 shadow-sm">
@@ -786,10 +965,15 @@ export default function HomePage() {
           </div>
           <div className="mt-2 flex items-center justify-between border-t border-[var(--line)] pt-2">
             <span className="text-[11.5px] font-semibold text-[var(--gold)] flex items-center gap-1">
-              Khám phá cửa hàng thịt <IconChevronRight size={13} />
+              {lang === "ja"
+                ? "精肉店を見る"
+                : lang === "en"
+                ? "Explore Butcher Shop"
+                : "Khám phá cửa hàng thịt"}{" "}
+              <IconChevronRight size={13} />
             </span>
             <span className="rounded-full bg-[var(--gold)]/20 px-2 py-0.5 text-[10.5px] font-bold text-[var(--gold)]">
-              Từ 280.000đ
+              {lang === "ja" ? "280,000₫〜" : lang === "en" ? "From 280,000₫" : "Từ 280.000đ"}
             </span>
           </div>
         </div>
@@ -799,7 +983,11 @@ export default function HomePage() {
       <section className="mt-5 px-3">
         <div className="flex items-center justify-between mb-2.5">
           <h2 className="font-display text-[15.5px] font-bold text-[var(--washi)]">
-            Thực Đơn Đề Xuất
+            {lang === "ja"
+              ? "おすすめメニュー"
+              : lang === "en"
+              ? "Recommended Dishes"
+              : "Thực Đơn Đề Xuất"}
           </h2>
           <button
             onClick={() => navigate("/menu")}
@@ -811,7 +999,7 @@ export default function HomePage() {
 
         {/* Thanh Tab phân loại TMĐT */}
         <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3 pb-2.5">
-          {FEED_TABS.map((tb) => {
+          {feedTabs.map((tb) => {
             const active = feedTab === tb.id;
             return (
               <button
@@ -845,22 +1033,34 @@ export default function HomePage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 mb-1">
                 <Icon3DShield size={20} />
               </div>
-              <span className="text-[10.5px] font-bold text-[var(--washi)]">100% Chính Ngạch</span>
-              <span className="text-[9px] text-[var(--faint)]">Wagyu A5 & Bò Mỹ</span>
+              <span className="text-[10.5px] font-bold text-[var(--washi)]">
+                {lang === "ja" ? "100%正規輸入" : lang === "en" ? "100% Certified" : "100% Chính Ngạch"}
+              </span>
+              <span className="text-[9px] text-[var(--faint)]">
+                {lang === "ja" ? "A5和牛・US牛" : lang === "en" ? "A5 Wagyu & US Beef" : "Wagyu A5 & Bò Mỹ"}
+              </span>
             </div>
             <div className="flex flex-col items-center border-x border-[var(--line)]">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 mb-1">
                 <Icon3DSnowflake size={20} />
               </div>
-              <span className="text-[10.5px] font-bold text-[var(--washi)]">Đóng Thùng Gel</span>
-              <span className="text-[9px] text-[var(--faint)]">Giữ lạnh tuyệt đối</span>
+              <span className="text-[10.5px] font-bold text-[var(--washi)]">
+                {lang === "ja" ? "保冷パック包装" : lang === "en" ? "Thermal Gel Pack" : "Đóng Thùng Gel"}
+              </span>
+              <span className="text-[9px] text-[var(--faint)]">
+                {lang === "ja" ? "冷温と鮮度を保持" : lang === "en" ? "Deep chill fresh" : "Giữ lạnh tuyệt đối"}
+              </span>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/10 mb-1">
                 <Icon3DLightning size={20} />
               </div>
-              <span className="text-[10.5px] font-bold text-[var(--washi)]">Giao 45 Phút</span>
-              <span className="text-[9px] text-[var(--faint)]">Nội thành hỏa tốc</span>
+              <span className="text-[10.5px] font-bold text-[var(--washi)]">
+                {lang === "ja" ? "45分スピード配達" : lang === "en" ? "45-Min Express" : "Giao 45 Phút"}
+              </span>
+              <span className="text-[9px] text-[var(--faint)]">
+                {lang === "ja" ? "市内迅速にお届け" : lang === "en" ? "Inner city rapid" : "Nội thành hỏa tốc"}
+              </span>
             </div>
           </div>
         </div>
@@ -878,7 +1078,7 @@ export default function HomePage() {
             onClick={() => openMap(`Miyako ${restaurant.address}`)}
             className="flex items-center gap-1 hover:text-[var(--washi)] transition-colors"
           >
-            <Icon3DMapPin size={15} /> Bản đồ chỉ đường
+            <Icon3DMapPin size={15} /> {lang === "ja" ? "地図・アクセス" : lang === "en" ? "Map & Directions" : "Bản đồ chỉ đường"}
           </button>
         </div>
       </section>
@@ -893,16 +1093,22 @@ export default function HomePage() {
       <Sheet
         open={voucherOpen}
         onClose={() => setVoucherOpen(false)}
-        title="Voucher Ưu Đãi Miyako"
+        title={lang === "ja" ? "宮古 限定クーポン" : lang === "en" ? "Miyako Vouchers" : "Voucher Ưu Đãi Miyako"}
       >
         <div className="space-y-3 pb-4">
           <div className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3 shadow-sm">
             <div className="flex items-center gap-3">
               <Icon3DVoucher size={36} />
               <div>
-                <div className="text-[13.5px] font-bold text-[var(--washi)]">Giảm 100.000đ</div>
-                <div className="text-[11px] text-[var(--muted)]">Áp dụng hóa đơn từ 1.000.000đ</div>
-                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">HSD: 31/12/2026</div>
+                <div className="text-[13.5px] font-bold text-[var(--washi)]">
+                  {lang === "ja" ? "100,000₫ 割引" : lang === "en" ? "100,000₫ Discount" : "Giảm 100.000đ"}
+                </div>
+                <div className="text-[11px] text-[var(--muted)]">
+                  {lang === "ja" ? "1,000,000₫以上のお会計で利用可能" : lang === "en" ? "For orders from 1,000,000₫" : "Áp dụng hóa đơn từ 1.000.000đ"}
+                </div>
+                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">
+                  {lang === "ja" ? "有効期限: 2026/12/31" : lang === "en" ? "EXP: 31/12/2026" : "HSD: 31/12/2026"}
+                </div>
               </div>
             </div>
             <button
@@ -913,7 +1119,7 @@ export default function HomePage() {
               }}
               className="rounded-full bg-[var(--shu)] px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform"
             >
-              Dùng ngay
+              {lang === "ja" ? "今すぐ使う" : lang === "en" ? "Use now" : "Dùng ngay"}
             </button>
           </div>
 
@@ -921,9 +1127,15 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <Icon3DVoucher size={36} />
               <div>
-                <div className="text-[13.5px] font-bold text-[var(--washi)]">Giảm 15% Set Bò Wagyu</div>
-                <div className="text-[11px] text-[var(--muted)]">Thịt bò tươi cắt trong ngày</div>
-                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">Mã: WAGYU15</div>
+                <div className="text-[13.5px] font-bold text-[var(--washi)]">
+                  {lang === "ja" ? "和牛セット 15% OFF" : lang === "en" ? "15% Off Wagyu Sets" : "Giảm 15% Set Bò Wagyu"}
+                </div>
+                <div className="text-[11px] text-[var(--muted)]">
+                  {lang === "ja" ? "当日切り立て新鮮和牛精肉" : lang === "en" ? "Fresh meats cut daily" : "Thịt bò tươi cắt trong ngày"}
+                </div>
+                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">
+                  {lang === "ja" ? "コード: WAGYU15" : lang === "en" ? "Code: WAGYU15" : "Mã: WAGYU15"}
+                </div>
               </div>
             </div>
             <button
@@ -934,7 +1146,7 @@ export default function HomePage() {
               }}
               className="rounded-full bg-[var(--shu)] px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform"
             >
-              Dùng ngay
+              {lang === "ja" ? "今すぐ使う" : lang === "en" ? "Use now" : "Dùng ngay"}
             </button>
           </div>
 
@@ -942,9 +1154,15 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <Icon3DVoucher size={36} />
               <div>
-                <div className="text-[13.5px] font-bold text-[var(--washi)]">Tặng 1 Đĩa Sashimi</div>
-                <div className="text-[11px] text-[var(--muted)]">Khi đặt bàn trước 18h hàng ngày</div>
-                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">Mã: FREEOMAKASE</div>
+                <div className="text-[13.5px] font-bold text-[var(--washi)]">
+                  {lang === "ja" ? "特選刺身一皿プレゼント" : lang === "en" ? "Free Salmon Sashimi Plate" : "Tặng 1 Đĩa Sashimi"}
+                </div>
+                <div className="text-[11px] text-[var(--muted)]">
+                  {lang === "ja" ? "毎日18時までのご予約限定" : lang === "en" ? "For bookings before 6:00 PM daily" : "Khi đặt bàn trước 18h hàng ngày"}
+                </div>
+                <div className="mt-0.5 text-[10px] text-[var(--shu)] font-medium">
+                  {lang === "ja" ? "コード: FREEOMAKASE" : lang === "en" ? "Code: FREEOMAKASE" : "Mã: FREEOMAKASE"}
+                </div>
               </div>
             </div>
             <button
@@ -955,7 +1173,7 @@ export default function HomePage() {
               }}
               className="rounded-full bg-[var(--shu)] px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform"
             >
-              Dùng ngay
+              {lang === "ja" ? "今すぐ使う" : lang === "en" ? "Use now" : "Dùng ngay"}
             </button>
           </div>
         </div>

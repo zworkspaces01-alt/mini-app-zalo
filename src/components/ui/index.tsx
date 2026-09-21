@@ -6,6 +6,7 @@ import {
   TextareaHTMLAttributes,
   useEffect,
 } from "react";
+import { useNavigate } from "zmp-ui";
 
 import { useTheme } from "@/hooks/use-theme";
 import { useT, useLang } from "@/i18n";
@@ -427,11 +428,16 @@ export function BrandLogo({
   variant = "vertical",
   className = "",
   alt = "Miyako",
+  onClick,
+  clickable = true,
 }: {
   variant?: "vertical" | "horizontal";
   className?: string;
   alt?: string;
+  onClick?: () => void;
+  clickable?: boolean;
 }) {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const src =
     variant === "horizontal"
@@ -442,7 +448,35 @@ export function BrandLogo({
       ? logoDarkSrc
       : logoSrc;
 
-  return <img src={src} alt={alt} className={className} />;
+  const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    e.stopPropagation();
+    haptic("light");
+    if (onClick) {
+      onClick();
+    } else {
+      navigate("/");
+      // Nếu đang ở trang chủ, cuộn mượt về đầu trang
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const scrollEl =
+        document.querySelector(".zaui-page") ||
+        document.querySelector(".page-scroll") ||
+        document.querySelector(".zaui-routes-item");
+      if (scrollEl) {
+        scrollEl.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+  };
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onClick={clickable || onClick ? handleClick : undefined}
+      className={`${className} ${
+        clickable || onClick ? "cursor-pointer active:scale-95 transition-transform" : ""
+      }`}
+    />
+  );
 }
 
 /* ─────────────── Modal / Hộp Thoại Giữa Màn Hình ─────────────── */

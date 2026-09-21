@@ -12,14 +12,16 @@ export function Screen({
   children,
   className = "",
   pad = true,
+  onScroll,
 }: {
   name: string;
   children: ReactNode;
   className?: string;
   pad?: boolean;
+  onScroll?: React.UIEventHandler<HTMLDivElement>;
 }) {
   return (
-    <Page name={name} hideScrollbar restoreScrollOnBack>
+    <Page name={name} hideScrollbar restoreScrollOnBack onScroll={onScroll}>
       <div className={`page-scroll ${pad ? "page-pad" : ""} ${className}`}>
         {children}
       </div>

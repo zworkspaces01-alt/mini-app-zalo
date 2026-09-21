@@ -9,16 +9,22 @@
  */
 import { COUNTER_SEATS } from "@/data/seats";
 import { supabase } from "@/services/supabase";
+import { notifyTelegram } from "@/services/telegram";
 import {
   BookingDraft,
   CartLine,
+  CustomerVoucher,
+  MembershipTier,
   OmakaseSet,
   Order,
+  PointsHistoryItem,
   Reservation,
   ReservationStatus,
+  RewardGiftItem,
   SeatAvailability,
 } from "@/types";
 import type { Database } from "@/types/db";
+
 
 type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
@@ -253,7 +259,29 @@ export async function createReservation(
 
   const row = data as unknown as ReservationRow;
   rememberCode(KEY_CODES, row.code);
-  return toReservation(row);
+  const reservation = toReservation(row);
+
+  // Gửi thông báo Telegram tức thì đến nhà hàng
+  notifyTelegram({
+    type: "reservation",
+    data: {
+      code: reservation.code,
+      guest_name: reservation.name,
+      guest_phone: reservation.phone,
+      guests: reservation.guests,
+      reserved_date: reservation.date,
+      reserved_time: reservation.time,
+      purpose: reservation.purpose,
+      omakase_title: draft.omakaseSetId,
+      seat_labels: draft.seatIds,
+      deposit_amount: reservation.depositAmount,
+      deposit_paid: reservation.depositPaid,
+      dietary: reservation.dietary,
+      note: reservation.note,
+    },
+  }).catch((err) => console.warn("Telegram notification error:", err));
+
+  return reservation;
 }
 
 export async function getReservationByCode(
@@ -334,7 +362,34 @@ export async function createOrder(input: {
 
   const row = data as unknown as OrderRow & Record<string, any>;
   rememberCode(KEY_ORDERS, row.code);
-  return toOrder(row, input.lines);
+  const order = toOrder(row, input.lines);
+
+  // Gửi thông báo Telegram tức thì đến nhà hàng
+  notifyTelegram({
+    type: "order",
+    data: {
+      code: order.code,
+      mode: order.mode,
+      table_id: order.tableId,
+      customer_name: order.customerName,
+      customer_phone: order.customerPhone,
+      delivery_address: order.deliveryAddress,
+      delivery_time: order.deliveryTime,
+      delivery_fee: order.deliveryFee,
+      lines: input.lines.map((l) => ({
+        dishName: l.name || l.dishId,
+        variantName: l.variantLabel,
+        qty: l.qty,
+        price: l.unitPrice,
+        note: l.note,
+      })),
+      subtotal: order.subtotal,
+      payment_method: order.paymentMethod,
+      note: order.note,
+    },
+  }).catch((err) => console.warn("Telegram notification error:", err));
+
+  return order;
 }
 
 export async function listOrders(): Promise<Order[]> {
@@ -380,3 +435,216 @@ export async function listOrders(): Promise<Order[]> {
 
   return rows.filter((r): r is Order => r !== null);
 }
+
+/* ─────────────── Tích Điểm, Hội Viên & Quà Tặng ─────────────── */
+
+export interface CustomerLoyaltyData {
+  id: string;
+  zaloId: string;
+  name: string;
+  phone?: string;
+  avatarUrl?: string;
+  points: number;
+  tier: MembershipTier;
+  totalSpent: number;
+  visitCount: number;
+}
+
+/** Đồng bộ hoặc tạo hồ sơ khách hàng trên Supabase */
+export async function syncCustomerProfile(input: {
+  zaloId: string;
+  name?: string;
+  phone?: string;
+  avatarUrl?: string;
+}): Promise<CustomerLoyaltyData | null> {
+  if (!supabase || !input.zaloId) return null;
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_or_create_customer", {
+      p_zalo_id: input.zaloId,
+      p_name: input.name || undefined,
+      p_phone: input.phone || undefined,
+      p_avatar_url: input.avatarUrl || undefined,
+    });
+    if (error || !data) return null;
+    const c = data as any;
+    return {
+      id: c.id,
+      zaloId: c.zalo_id,
+      name: c.name ?? "Quý Khách",
+      phone: c.phone ?? undefined,
+      avatarUrl: c.avatar_url ?? undefined,
+      points: c.points ?? 0,
+      tier: (c.tier as MembershipTier) || "bronze",
+      totalSpent: c.total_spent ?? 0,
+      visitCount: c.visit_count ?? 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Tải danh sách quà tặng đổi điểm từ Supabase */
+export async function fetchRewardGifts(): Promise<RewardGiftItem[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await (supabase as any)
+      .from("reward_gifts")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (error || !data) return [];
+    return data.map((g: any) => ({
+      id: g.id,
+      category: g.category,
+      title: g.title,
+      desc: g.description ?? "",
+      worthText: g.worth_text ?? "",
+      pointsCost: g.points_cost,
+      badge: g.badge ?? undefined,
+      imageUrl: g.image_url ?? undefined,
+      isActive: g.is_active,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Nhận thưởng nhiệm vụ (Điểm danh, Quét QR bàn, Đánh giá, Chia sẻ) */
+export async function claimQuestReward(input: {
+  zaloId: string;
+  questId: "daily_checkin" | "table_qr" | "review" | "share";
+  extraInfo?: string;
+}): Promise<{
+  success: boolean;
+  pointsReward?: number;
+  newBalance?: number;
+  title?: string;
+  error?: string;
+  alreadyClaimed?: boolean;
+}> {
+  if (!supabase) {
+    return { success: false, error: "Chưa kết nối máy chủ" };
+  }
+  try {
+    const { data, error } = await (supabase.rpc as any)("claim_quest_reward", {
+      p_zalo_id: input.zaloId,
+      p_quest_id: input.questId,
+      p_extra_info: input.extraInfo || undefined,
+    });
+    if (error) return { success: false, error: error.message };
+    const res = data as any;
+    if (!res.success) {
+      return {
+        success: false,
+        error: res.error,
+        alreadyClaimed: res.already_claimed,
+      };
+    }
+    return {
+      success: true,
+      pointsReward: res.points_reward,
+      newBalance: res.new_balance,
+      title: res.title,
+    };
+  } catch (e: any) {
+    return { success: false, error: e?.message || "Lỗi nhận thưởng" };
+  }
+}
+
+/** Đổi quà lấy mã Voucher */
+export async function redeemRewardGift(input: {
+  zaloId: string;
+  giftId: string;
+}): Promise<{
+  success: boolean;
+  code?: string;
+  giftTitle?: string;
+  pointsCost?: number;
+  newBalance?: number;
+  error?: string;
+}> {
+  if (!supabase) {
+    return { success: false, error: "Chưa kết nối máy chủ" };
+  }
+  try {
+    const { data, error } = await (supabase.rpc as any)("redeem_reward_gift", {
+      p_zalo_id: input.zaloId,
+      p_gift_id: input.giftId,
+    });
+    if (error) return { success: false, error: error.message };
+    const res = data as any;
+    if (!res.success) {
+      return { success: false, error: res.error };
+    }
+    return {
+      success: true,
+      code: res.code,
+      giftTitle: res.gift_title,
+      pointsCost: res.points_cost,
+      newBalance: res.new_balance,
+    };
+  } catch (e: any) {
+    return { success: false, error: e?.message || "Lỗi đổi quà" };
+  }
+}
+
+/** Lấy danh sách Voucher của khách hàng */
+export async function fetchCustomerVouchers(
+  zaloId: string
+): Promise<CustomerVoucher[]> {
+  if (!supabase || !zaloId) return [];
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_customer_vouchers", {
+      p_zalo_id: zaloId,
+    });
+    if (error || !data) return [];
+    return (data as any[]).map((v) => ({
+      id: v.id,
+      code: v.code,
+      giftId: v.gift_id ?? undefined,
+      giftTitle: v.gift_title,
+      giftCategory: v.gift_category,
+      worthText: v.worth_text ?? undefined,
+      status: v.status,
+      createdAt: v.created_at,
+      usedAt: v.used_at ?? undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Lấy lịch sử biến động điểm từ sổ cái */
+export async function fetchCustomerPointsLedger(
+  customerId: string
+): Promise<PointsHistoryItem[]> {
+  if (!supabase || !customerId) return [];
+  try {
+    const { data, error } = await (supabase as any)
+      .from("customer_points_ledger")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error || !data) return [];
+    return data.map((row: any) => {
+      const d = new Date(row.created_at);
+      const dateStr = `${d.getHours().toString().padStart(2, "0")}:${d
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")} - ${d.getDate()}/${d.getMonth() + 1}`;
+      const isPositive = row.amount > 0;
+      return {
+        id: row.id,
+        title: isPositive ? "Tích luỹ điểm thưởng" : "Đổi quà ưu đãi",
+        desc: row.reason,
+        date: dateStr,
+        points: row.amount,
+        type: (isPositive ? (row.order_id ? "order" : "reward") : "redeem") as PointsHistoryItem["type"],
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+

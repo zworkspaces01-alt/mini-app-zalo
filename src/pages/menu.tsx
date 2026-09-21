@@ -12,7 +12,7 @@ import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
 
 import { useRestaurant } from "@/hooks/use-restaurant";
-import { useT, useTr } from "@/i18n";
+import { useT, useTr, useLang } from "@/i18n";
 import { haptic, scanTableQR } from "@/services/zalo";
 import { cartCountAtom, tableIdAtom } from "@/state/atoms";
 import { categoriesAtom, dishesAtom } from "@/state/content";
@@ -20,15 +20,35 @@ import { Dish } from "@/types";
 import { deaccent } from "@/utils/format";
 
 /* ─── Danh sách từ khoá placeholder chuyển động liên tục đồng bộ Trang Chủ ─── */
-const SEARCH_PLACEHOLDERS = [
-  "Tìm Bò Wagyu A5 nướng than hoa...",
-  "Tìm Sashimi Cá Hồi Na Uy tươi sống...",
-  "Tìm Tiệc Bếp Trưởng Omakase 12 ghế...",
-  "Tìm Set Lẩu Shabu Shabu & Sukiyaki...",
-  "Tìm Cơm Lươn Nhật sốt Kabayaki...",
-  "Tìm Thịt Bò Tươi Butcher cắt lát...",
-  "Tìm Sushi bụng cá ngừ Otoro béo ngậy...",
-];
+const SEARCH_PLACEHOLDERS = {
+  vi: [
+    "Tìm Bò Wagyu A5 nướng than hoa...",
+    "Tìm Sashimi Cá Hồi Na Uy tươi sống...",
+    "Tìm Tiệc Bếp Trưởng Omakase 12 ghế...",
+    "Tìm Set Lẩu Shabu Shabu & Sukiyaki...",
+    "Tìm Cơm Lươn Nhật sốt Kabayaki...",
+    "Tìm Thịt Bò Tươi Butcher cắt lát...",
+    "Tìm Sushi bụng cá ngừ Otoro béo ngậy...",
+  ],
+  en: [
+    "Search Charcoal Grilled A5 Wagyu...",
+    "Search Fresh Norwegian Salmon...",
+    "Search Master Chef Omakase 12 seats...",
+    "Search Shabu Shabu & Sukiyaki Boxes...",
+    "Search Japanese Eel Donburi...",
+    "Search Butcher Fresh Sliced Beef...",
+    "Search Melting Otoro Bluefin Tuna...",
+  ],
+  ja: [
+    "炭火焼きA5和牛を探す...",
+    "新鮮な生サーモン刺身を探す...",
+    "板前おまかせコース12席を探す...",
+    "しゃぶしゃぶ＆すき焼きセットを探す...",
+    "特製うな重・蒲焼きを探す...",
+    "切り立て和牛精肉を探す...",
+    "とろける本鮪大トロを探す...",
+  ],
+};
 
 export default function MenuPage() {
   const navigate = useNavigate();
@@ -40,10 +60,15 @@ export default function MenuPage() {
   const restaurant = useRestaurant();
   const t = useT();
   const tr = useTr();
+  const lang = useLang();
   const [categoryId, setCategoryId] = useState<string>("");
   const [query, setQuery] = useState("");
   const [openDish, setOpenDish] = useState<Dish | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const currentPlaceholders = useMemo(() => {
+    return SEARCH_PLACEHOLDERS[lang] ?? SEARCH_PLACEHOLDERS.vi;
+  }, [lang]);
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
@@ -53,12 +78,12 @@ export default function MenuPage() {
     const interval = setInterval(() => {
       setPlaceholderFade(false);
       setTimeout(() => {
-        setPlaceholderIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length);
+        setPlaceholderIndex((prev) => (prev + 1) % currentPlaceholders.length);
         setPlaceholderFade(true);
       }, 250);
     }, 3200);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPlaceholders.length]);
 
   // Chỉ hiển thị các nhóm món ăn phục vụ tại nhà hàng (tách riêng Butcher)
   const restaurantCategories = useMemo(
@@ -167,9 +192,9 @@ export default function MenuPage() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!query.trim()) {
-                const term = SEARCH_PLACEHOLDERS[placeholderIndex]
-                  .replace(/^Tìm\s+/, "")
-                  .replace(/\.\.\.$/, "");
+                const term = currentPlaceholders[placeholderIndex]
+                  .replace(/^(Tìm|Search)\s+/, "")
+                  .replace(/\s*(を探す)?\.\.\.$/, "");
                 setQuery(term);
               }
               haptic("light");
@@ -197,7 +222,7 @@ export default function MenuPage() {
                     }`}
                   >
                     <span className="truncate">
-                      {SEARCH_PLACEHOLDERS[placeholderIndex]}
+                      {currentPlaceholders[placeholderIndex]}
                     </span>
                   </div>
                 )}
@@ -206,7 +231,7 @@ export default function MenuPage() {
               {query && (
                 <button
                   type="button"
-                  aria-label="Xóa tìm kiếm"
+                  aria-label="Clear"
                   onClick={() => {
                     haptic("light");
                     setQuery("");
@@ -223,7 +248,7 @@ export default function MenuPage() {
               type="submit"
               className="h-[36px] px-3.5 rounded-full bg-[var(--shu)] text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform shrink-0 flex items-center justify-center z-20"
             >
-              Tìm kiếm
+              {lang === "ja" ? "検索" : lang === "en" ? "Search" : "Tìm kiếm"}
             </button>
           </form>
         </div>
@@ -285,12 +310,16 @@ export default function MenuPage() {
                   Miyako Wagyu Butcher Shop
                 </div>
                 <div className="text-[11.5px] text-[var(--muted)]">
-                  Thịt bò tươi Wagyu A5 & Bò Mỹ sơ chế mang về
+                  {lang === "ja"
+                    ? "テイクアウト用 切り立てA5和牛＆USプライムビーフ"
+                    : lang === "en"
+                    ? "Fresh Japanese A5 Wagyu & US Prime beef to take home"
+                    : "Thịt bò tươi Wagyu A5 & Bò Mỹ sơ chế mang về"}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-0.5 text-[12px] font-medium text-[var(--gold)]">
-              <span>Xem ngay</span>
+              <span>{lang === "ja" ? "今すぐ見る" : lang === "en" ? "View now" : "Xem ngay"}</span>
               <IconChevronRight size={14} />
             </div>
           </div>

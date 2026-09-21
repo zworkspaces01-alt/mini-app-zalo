@@ -2,8 +2,9 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSnackbar } from "zmp-ui";
 
-import { Button, EmptyState, Field, Note, QtyStepper, TextArea, TextInput } from "@/components/ui";
+import { Button, EmptyState, Field, Note, QtyStepper, Sheet, TextArea, TextInput } from "@/components/ui";
 import { IconCheck, IconClose, IconQR } from "@/components/ui/icons";
+import { Icon3DPoints, Icon3DVoucher } from "@/components/ui/icons-3d";
 import { BackHeader, Screen } from "@/components/ui/screen";
 import { createOrder, listReservations } from "@/services/api";
 import { useRestaurant } from "@/hooks/use-restaurant";
@@ -11,16 +12,20 @@ import { useLang, useT, useTr } from "@/i18n";
 import { backendError } from "@/services/supabase";
 import { haptic } from "@/services/zalo";
 import {
+  appliedVoucherAtom,
   cartAtom,
   cartSubtotalAtom,
   clearCartAtom,
   setLineQtyAtom,
   tableIdAtom,
   userAtom,
+  userTierAtom,
+  userVouchersAtom,
 } from "@/state/atoms";
 import { dishesByIdAtom } from "@/state/content";
 import { Order, Reservation } from "@/types";
-import { formatDateLabel, vnd } from "@/utils/format";
+import { formatDateLabel, formatNumber, vnd } from "@/utils/format";
+
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -63,6 +68,35 @@ export default function CartPage() {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
 
+  // Voucher & Điểm thưởng tích luỹ
+  const [appliedVoucher, setAppliedVoucher] = useAtom(appliedVoucherAtom);
+  const [vouchers] = useAtom(userVouchersAtom);
+  const tier = useAtomValue(userTierAtom);
+  const [voucherSheetOpen, setVoucherSheetOpen] = useState(false);
+
+  // Tính số tiền giảm giá từ voucher
+  const discountAmount = useMemo(() => {
+    if (!appliedVoucher) return 0;
+    const text = (appliedVoucher.giftTitle + " " + (appliedVoucher.worthText || "")).toLowerCase();
+    if (text.includes("200.000") || text.includes("200k")) return 200000;
+    if (text.includes("100.000") || text.includes("100k")) return 100000;
+    if (text.includes("50.000") || text.includes("50k")) return 50000;
+    return 50000;
+  }, [appliedVoucher]);
+
+  const finalTotal = Math.max(0, subtotal - discountAmount);
+
+  // Tỷ lệ tích điểm theo phân hạng
+  const tierRate = useMemo(() => {
+    const t = tier === ("platinum" as any) ? "diamond" : tier;
+    if (t === "diamond") return 0.12;
+    if (t === "gold") return 0.08;
+    if (t === "silver") return 0.05;
+    return 0.03;
+  }, [tier]);
+
+  const estimatedPoints = Math.round((finalTotal * tierRate) / 1000);
+
   useEffect(() => {
     if (user?.name && !customerName) setCustomerName(user.name);
     if (user?.phone && !customerPhone) setCustomerPhone(user.phone);
@@ -101,12 +135,21 @@ export default function CartPage() {
 
     setSubmitting(true);
     try {
+      const finalNote = [
+        appliedVoucher
+          ? `[Voucher: ${appliedVoucher.code} - Giảm ${formatNumber(discountAmount)}đ]`
+          : "",
+        note.trim(),
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
       const order = await createOrder({
         lines: cart,
         mode,
         tableId: mode === "dine-in" ? tableId ?? undefined : undefined,
         reservationId: mode === "pre-order" ? reservationId : undefined,
-        note: note.trim() || undefined,
+        note: finalNote || undefined,
         zaloId: user?.id,
         customerName: mode === "takeout" || mode === "delivery" ? customerName.trim() : undefined,
         customerPhone: mode === "takeout" || mode === "delivery" ? customerPhone.trim() : undefined,
@@ -117,6 +160,8 @@ export default function CartPage() {
 
       haptic("medium");
       clearCart();
+      setAppliedVoucher(null);
+
 
       const successMsg =
         mode === "dine-in"
@@ -427,12 +472,107 @@ export default function CartPage() {
         />
       </div>
 
-      {/* ── Tạm tính ── */}
-      <div className="card mt-5 px-4">
-        <div className="flex items-baseline justify-between py-3.5">
-          <span className="text-[14px]">{t.cart.subtotal}</span>
-          <span className="text-[19px] font-semibold tabular-nums text-[var(--gold)]">
+      {/* ── Ưu Đãi Voucher & Tích Điểm Hội Viên ── */}
+      <div className="mt-5 space-y-2.5">
+        {/* Hàng chọn Voucher */}
+        <div
+          onClick={() => {
+            haptic("light");
+            setVoucherSheetOpen(true);
+          }}
+          className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-3.5 cursor-pointer hover:border-[var(--gold)]/50 active:scale-[0.99] transition-all shadow-sm"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Icon3DVoucher size={26} />
+            <div className="min-w-0">
+              <div className="text-[13px] font-semibold text-[var(--washi)]">
+                {appliedVoucher
+                  ? appliedVoucher.giftTitle
+                  : lang === "ja"
+                  ? "優待券・クーポン割引"
+                  : lang === "en"
+                  ? "Vouchers & Discounts"
+                  : "Ưu đãi & Voucher giảm giá"}
+              </div>
+              <div className="text-[11px] text-[var(--muted)] truncate">
+                {appliedVoucher
+                  ? `${lang === "ja" ? "コード: " : lang === "en" ? "Code: " : "Mã: "}${appliedVoucher.code} (-${vnd(discountAmount, lang)})`
+                  : `${vouchers.filter((v) => v.status === "active").length} ${
+                      lang === "ja"
+                        ? "枚の利用可能クーポン"
+                        : lang === "en"
+                        ? "vouchers available"
+                        : "voucher sẵn sàng trong ví"
+                    }`}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[12px] font-bold text-[var(--gold)]">
+              {appliedVoucher
+                ? `-${vnd(discountAmount, lang)}`
+                : lang === "ja"
+                ? "選択"
+                : lang === "en"
+                ? "Select"
+                : "Chọn mã"}
+            </span>
+            <span className="text-[var(--faint)] text-[14px]">›</span>
+          </div>
+        </div>
+
+        {/* Khối Hoàn Điểm Tích Luỹ */}
+        <div className="flex items-center justify-between rounded-2xl border border-[var(--gold)]/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-3 text-[12.5px]">
+          <div className="flex items-center gap-2">
+            <Icon3DPoints size={22} />
+            <div>
+              <span className="font-bold text-[var(--gold)]">
+                +{estimatedPoints} {t.rewards.pts}
+              </span>
+              <span className="ml-1 text-[11px] text-[var(--muted)]">
+                {lang === "ja"
+                  ? `（完了後に${Math.round(tierRate * 100)}%還元）`
+                  : lang === "en"
+                  ? `(Earn ${Math.round(tierRate * 100)}% on completion)`
+                  : `(Tích ${Math.round(tierRate * 100)}% sau khi hoàn tất)`}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/rewards")}
+            className="text-[11px] font-medium text-[var(--gold)] underline active:opacity-80"
+          >
+            {lang === "ja" ? "会員特権" : lang === "en" ? "Privileges" : "Đặc quyền"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Bảng tổng tính tiền ── */}
+      <div className="card mt-4 divide-y divide-[var(--line)] px-4">
+        <div className="flex items-baseline justify-between py-2.5 text-[13.5px]">
+          <span className="text-[var(--muted)]">{t.cart.subtotal}</span>
+          <span className="font-medium tabular-nums text-[var(--washi)]">
             {vnd(subtotal, lang)}
+          </span>
+        </div>
+        {discountAmount > 0 && (
+          <div className="flex items-baseline justify-between py-2.5 text-[13.5px]">
+            <span className="text-emerald-400">
+              {lang === "ja" ? "クーポン割引" : lang === "en" ? "Voucher Discount" : "Giảm giá Voucher"}
+            </span>
+            <span className="font-semibold tabular-nums text-emerald-400">
+              -{vnd(discountAmount, lang)}
+            </span>
+          </div>
+        )}
+        <div className="flex items-baseline justify-between py-3">
+          <span className="font-bold text-[14.5px]">
+            {lang === "ja" ? "お支払い合計" : lang === "en" ? "Total Payment" : "Tổng thanh toán"}
+          </span>
+          <span className="text-[20px] font-bold tabular-nums text-[var(--gold)]">
+            {vnd(finalTotal, lang)}
           </span>
         </div>
       </div>
@@ -453,6 +593,125 @@ export default function CartPage() {
             : t.cart.submitDelivery}
         </Button>
       </div>
+
+      {/* ── Sheet chọn Voucher từ ví ── */}
+      <Sheet
+        open={voucherSheetOpen}
+        onClose={() => setVoucherSheetOpen(false)}
+        title={lang === "ja" ? "適用するクーポンを選択" : lang === "en" ? "Select Voucher" : "Chọn Voucher Áp Dụng"}
+      >
+        <div className="p-4 space-y-3">
+          <div className="text-[12px] text-[var(--muted)]">
+            {lang === "ja"
+              ? "保有しているクーポンから選択して割引を適用します："
+              : lang === "en"
+              ? "Select an active voucher from your wallet to apply discount:"
+              : "Chọn mã ưu đãi từ ví voucher của bạn để giảm trừ trực tiếp trên đơn hàng:"}
+          </div>
+
+          {vouchers.filter((v) => v.status === "active").length === 0 ? (
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)] text-[22px]">
+                🎟️
+              </div>
+              <h4 className="mt-2 font-display text-[14px] font-bold text-[var(--washi)]">
+                {lang === "ja" ? "利用可能なクーポンはありません" : lang === "en" ? "No vouchers in wallet" : "Ví voucher đang trống"}
+              </h4>
+              <p className="mt-1 text-[11.5px] text-[var(--muted)]">
+                {lang === "ja"
+                  ? "ポイント交換所でポイントを使ってクーポンを獲得できます。"
+                  : lang === "en"
+                  ? "Redeem your loyalty points to get more discount vouchers."
+                  : "Hãy đổi điểm tại trang Tích Điểm để nhận thêm nhiều voucher hấp dẫn."}
+              </p>
+              <button
+                onClick={() => {
+                  setVoucherSheetOpen(false);
+                  navigate("/rewards");
+                }}
+                className="mt-3 rounded-full bg-[var(--shu)] px-4 py-1.5 text-[12px] font-bold text-white shadow-sm"
+              >
+                {lang === "ja" ? "ポイントを交換する" : lang === "en" ? "Redeem now" : "Đổi quà ngay"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
+              {vouchers
+                .filter((v) => v.status === "active")
+                .map((v) => {
+                  const isSelected = appliedVoucher?.id === v.id;
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() => {
+                        haptic("light");
+                        setAppliedVoucher(isSelected ? null : v);
+                        setVoucherSheetOpen(false);
+                      }}
+                      className={`flex items-center justify-between gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all ${
+                        isSelected
+                          ? "border-[var(--gold)] bg-[var(--gold-dim)] shadow-sm"
+                          : "border-[var(--line)] bg-[var(--surface-2)] hover:border-[var(--line-strong)]"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[12px] font-bold text-[var(--gold)]">
+                            {v.code}
+                          </span>
+                          {isSelected && (
+                            <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-400">
+                              Đang áp dụng
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-display text-[13.5px] font-semibold text-[var(--washi)] mt-0.5 truncate">
+                          {v.giftTitle}
+                        </div>
+                        {v.worthText && (
+                          <div className="text-[11px] text-[var(--muted)] mt-0.2">
+                            {v.worthText}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`shrink-0 rounded-full px-3 py-1 text-[11.5px] font-bold transition-all ${
+                          isSelected
+                            ? "bg-[var(--gold)] text-black font-semibold"
+                            : "bg-[var(--surface)] text-[var(--washi)] border border-[var(--line)]"
+                        }`}
+                      >
+                        {isSelected ? "Bỏ chọn" : "Áp dụng"}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {appliedVoucher && (
+            <button
+              onClick={() => {
+                setAppliedVoucher(null);
+                setVoucherSheetOpen(false);
+              }}
+              className="w-full py-2.5 text-[12px] font-medium text-rose-400 hover:text-rose-300"
+            >
+              Không sử dụng voucher nào
+            </button>
+          )}
+
+          <button
+            onClick={() => setVoucherSheetOpen(false)}
+            className="w-full h-11 rounded-full bg-[var(--surface-3)] font-bold text-[13px] text-[var(--washi)] border border-[var(--line)] active:scale-98 transition-transform"
+          >
+            Xong
+          </button>
+        </div>
+      </Sheet>
+
 
       {/* ── Modal thanh toán VietQR ── */}
       {showQRModal && createdOrder && (

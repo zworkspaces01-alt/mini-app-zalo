@@ -163,11 +163,15 @@ export default function ProfilePage() {
                     Miyako Club
                   </span>
                   <span className="rounded-full bg-amber-400/20 border border-amber-400/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-300 uppercase">
-                    Hạng Vàng
+                    {lang === "ja" ? "ゴールド会員" : lang === "en" ? "Gold Tier" : "Hạng Vàng"}
                   </span>
                 </div>
                 <div className="text-[11.5px] text-[var(--faint)] mt-0.5">
-                  Tích luỹ 8% hoá đơn · Ưu tiên đặt bàn
+                  {lang === "ja"
+                    ? "8%還元 · 優先予約特典"
+                    : lang === "en"
+                    ? "Earn 8% back · Priority seating"
+                    : "Tích luỹ 8% hoá đơn · Ưu tiên đặt bàn"}
                 </div>
               </div>
             </div>
@@ -176,16 +180,20 @@ export default function ProfilePage() {
               <div className="font-display text-[20px] font-extrabold text-[var(--gold)] leading-none">
                 {formatNumber(points)}
               </div>
-              <div className="text-[10px] text-[var(--faint)] mt-0.5">điểm thưởng</div>
+              <div className="text-[10px] text-[var(--faint)] mt-0.5">{t.rewards.pointsUnit}</div>
             </div>
           </div>
 
           <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-[11.5px]">
             <span className="text-[var(--faint)]">
-              Còn 750 điểm để lên Hạng Bạch Kim
+              {lang === "ja"
+                ? "プラチナ会員まであと750pt"
+                : lang === "en"
+                ? "750 pts to Platinum Tier"
+                : "Còn 750 điểm để lên Hạng Bạch Kim"}
             </span>
             <div className="flex items-center gap-0.5 font-bold text-[var(--gold)]">
-              <span>Đổi quà & Ưu đãi</span>
+              <span>{lang === "ja" ? "特典と交換" : lang === "en" ? "Redeem rewards" : "Đổi quà & Ưu đãi"}</span>
               <IconChevronRight size={13} />
             </div>
           </div>
@@ -195,8 +203,8 @@ export default function ProfilePage() {
         <div className="card mb-7 divide-y divide-[var(--line)] px-4 rounded-2xl border border-[var(--line)] shadow-sm">
           <LinkRow
             icon={<Icon3DPoints size={22} />}
-            label="Tích điểm & Đặc quyền hội viên"
-            value={`${formatNumber(points)} điểm`}
+            label={lang === "ja" ? "ポイント＆会員特典" : lang === "en" ? "Loyalty Points & Benefits" : "Tích điểm & Đặc quyền hội viên"}
+            value={`${formatNumber(points)} ${t.rewards.pts}`}
             onClick={() => navigate("/rewards")}
           />
           <LinkRow
@@ -257,9 +265,9 @@ export default function ProfilePage() {
                       {o.mode === "dine-in"
                         ? t.profile.atTable(o.tableId ?? "")
                         : o.mode === "takeout"
-                        ? "🏪 Mang về (Takeout)"
+                        ? (lang === "ja" ? "🏪 テイクアウト" : lang === "en" ? "🏪 Takeout" : "🏪 Mang về")
                         : o.mode === "delivery"
-                        ? "🛵 Giao tận nơi"
+                        ? (lang === "ja" ? "🛵 スピード配達" : lang === "en" ? "🛵 Delivery" : "🛵 Giao tận nơi")
                         : t.profile.preOrder}
                     </span>
                     <span>·</span>
@@ -276,14 +284,14 @@ export default function ProfilePage() {
                       }`}
                     >
                       {o.status === "completed" || o.status === "served"
-                        ? "Hoàn tất"
+                        ? (lang === "ja" ? "完了" : lang === "en" ? "Completed" : "Hoàn tất")
                         : o.status === "delivering"
-                        ? "Đang giao"
+                        ? (lang === "ja" ? "配達中" : lang === "en" ? "Delivering" : "Đang giao")
                         : o.status === "preparing"
-                        ? "Đang làm"
+                        ? (lang === "ja" ? "調理中" : lang === "en" ? "Preparing" : "Đang làm")
                         : o.status === "cancelled"
-                        ? "Đã huỷ"
-                        : "Chờ xác nhận"}
+                        ? (lang === "ja" ? "キャンセル" : lang === "en" ? "Cancelled" : "Đã huỷ")
+                        : (lang === "ja" ? "確認中" : lang === "en" ? "Pending" : "Chờ xác nhận")}
                     </span>
                   </div>
                   {o.deliveryAddress && (

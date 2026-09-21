@@ -170,11 +170,49 @@ export default function OrdersPage() {
   const setStatus = async (order: Order, status: OrderStatus) => {
     setBusyId(order.id);
     setError(null);
-    const updatePayload: any = { status };
-    if (status === "completed" && order.mode === "delivery") {
-      updatePayload.payment_status = "paid";
+
+    // Khi chuyển sang completed: Tự động tích điểm cho khách hàng qua RPC
+    if (status === "completed") {
+      const { error: rpcError } = await (supabase.rpc as any)(
+        "complete_order_and_credit_points",
+        { p_order_id: order.id }
+      );
+
+      if (rpcError) {
+        // Fallback update thông thường nếu RPC gặp sự cố
+        const { data, error } = await supabase
+          .from("orders")
+          .update({ status: "completed", payment_status: "paid" })
+          .eq("id", order.id)
+          .select("*, order_lines(*)")
+          .single();
+        setBusyId(null);
+        if (error) {
+          setError(error.message);
+        } else if (data) {
+          setItems((prev) =>
+            (prev ?? []).map((o) => (o.id === data.id ? (data as OrderWithLines) : o))
+          );
+        }
+        return;
+      }
+
+      // Đọc lại đơn hàng đã được cập nhật điểm
+      const { data } = await supabase
+        .from("orders")
+        .select("*, order_lines(*)")
+        .eq("id", order.id)
+        .single();
+      setBusyId(null);
+      if (data) {
+        setItems((prev) =>
+          (prev ?? []).map((o) => (o.id === data.id ? (data as OrderWithLines) : o))
+        );
+      }
+      return;
     }
 
+    const updatePayload: any = { status };
     const { data, error } = await supabase
       .from("orders")
       .update(updatePayload)
@@ -194,6 +232,7 @@ export default function OrdersPage() {
       );
     }
   };
+
 
   const togglePaymentStatus = async (order: Order) => {
     setBusyId(order.id);
@@ -568,14 +607,22 @@ export default function OrdersPage() {
                     )}
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] text-faint block">
-                      {o.delivery_fee ? `Ship: ${vnd(o.delivery_fee)} · ` : ""}
-                      {dateTimeLabel(o.created_at)}
-                    </span>
+                    <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                      {(o as any).points_earned > 0 && (
+                        <span className="rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.2 text-[10px] font-bold text-emerald-400">
+                          +{(o as any).points_earned}đ thưởng
+                        </span>
+                      )}
+                      <span className="text-[11px] text-faint">
+                        {o.delivery_fee ? `Ship: ${vnd(o.delivery_fee)} · ` : ""}
+                        {dateTimeLabel(o.created_at)}
+                      </span>
+                    </div>
                     <span className="font-semibold text-[15px] tabular-nums text-washi">
                       {vnd((o.subtotal || 0) + (o.delivery_fee || 0))}
                     </span>
                   </div>
+
                 </div>
 
                 {/* Các nút hành động */}

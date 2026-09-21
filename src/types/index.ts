@@ -174,6 +174,9 @@ export interface Order {
   deliveryFee?: number;
   paymentMethod?: "vietqr" | "cod" | "transfer";
   paymentStatus?: "unpaid" | "paid";
+  pointsEarned?: number;
+  discountAmount?: number;
+  voucherCode?: string;
 }
 
 export interface UserProfile {
@@ -182,3 +185,41 @@ export interface UserProfile {
   avatar?: string;
   phone?: string;
 }
+
+/* ─────────────── Tích Điểm & Hội Viên ─────────────── */
+export type MembershipTier = "bronze" | "silver" | "gold" | "diamond";
+
+export interface RewardGiftItem {
+  id: string;
+  category: "all" | "voucher" | "dish" | "drink";
+  title: string;
+  desc: string;
+  worthText: string;
+  pointsCost: number;
+  badge?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+}
+
+export interface CustomerVoucher {
+  id: string;
+  code: string;
+  giftId?: string;
+  giftTitle: string;
+  giftCategory: string;
+  worthText?: string;
+  status: "active" | "used" | "expired";
+  createdAt: string;
+  usedAt?: string;
+}
+
+export interface PointsHistoryItem {
+  id: string;
+  title: string;
+  desc: string;
+  date: string;
+  points: number;
+  type: "order" | "booking" | "redeem" | "reward" | "bonus";
+}
+
+

@@ -36,7 +36,25 @@ import {
   omakaseTatami,
 } from "@/utils/images";
 
+interface LocalizedString {
+  vi: string;
+  en: string;
+  ja: string;
+}
+
 /* ─── Cấu trúc mục ảnh Pinterest (Món ăn & Không gian Omakase) ─── */
+export type RawPinterestItem = {
+  id: string;
+  type: "space" | "dish";
+  title: LocalizedString;
+  jp: string;
+  tag: LocalizedString;
+  aspectClass: string;
+  image: string;
+  desc: LocalizedString;
+  seating?: "counter" | "private";
+};
+
 export type PinterestItem = {
   id: string;
   type: "space" | "dish";
@@ -49,136 +67,359 @@ export type PinterestItem = {
   seating?: "counter" | "private";
 };
 
-export const OMAKASE_PINTEREST_GALLERY: PinterestItem[] = [
+export const RAW_OMAKASE_PINTEREST_GALLERY: RawPinterestItem[] = [
   {
     id: "pin-counter-mood",
     type: "space",
-    title: "Quầy Bar Itamae 12 Chỗ",
+    title: {
+      vi: "Quầy Bar Itamae 12 Chỗ",
+      en: "12-Seat Itamae Counter",
+      ja: "板前カウンター12席",
+    },
     jp: "板前カウンター · 12 SEATS",
-    tag: "Không gian Omakase",
+    tag: {
+      vi: "Không gian Omakase",
+      en: "Omakase Space",
+      ja: "空間・個室",
+    },
     aspectClass: "aspect-[3/4]",
     image: omakaseCounterMood,
-    desc: "12 chỗ ngồi độc quyền bao quanh quầy chế tác gỗ Hinoki, nơi thực khách trực diện thưởng lãm nghệ thuật ẩm thực từ Bếp Trưởng.",
+    desc: {
+      vi: "12 chỗ ngồi độc quyền bao quanh quầy chế tác gỗ Hinoki, nơi thực khách trực diện thưởng lãm nghệ thuật ẩm thực từ Bếp Trưởng.",
+      en: "Exclusive 12 seats surrounding the natural Hinoki counter, offering direct view of master culinary craftsmanship.",
+      ja: "樹齢数百年の檜カウンターを囲む限定12席。総料理長の鮮やかな手捌きを特等席でお愉しみいただけます。",
+    },
     seating: "counter",
   },
   {
     id: "pin-chef-prep",
     type: "dish",
-    title: "Chế Tác Otoro & Uni Vàng 24K",
+    title: {
+      vi: "Chế Tác Otoro & Uni Vàng 24K",
+      en: "Crafting Otoro & 24K Uni",
+      ja: "大トロ雲丹・24K金箔のにぎり",
+    },
     jp: "大トロ雲丹 · CHEF'S CRAFT",
-    tag: "Món ăn tại quầy",
+    tag: {
+      vi: "Món ăn tại quầy",
+      en: "Counter Dish",
+      ja: "板前料理",
+    },
     aspectClass: "aspect-[3/4]",
     image: omakaseChefPrep,
-    desc: "Bếp trưởng nắn từng khối cơm giấm ấm, đặt lát cá ngừ Hon-Maguro béo đậm, nhím biển Hokkaido và dát vảy vàng 24k ngay trước mắt thực khách.",
+    desc: {
+      vi: "Bếp trưởng nắn từng khối cơm giấm ấm, đặt lát cá ngừ Hon-Maguro béo đậm, nhím biển Hokkaido và dát vảy vàng 24k ngay trước mắt thực khách.",
+      en: "The chef handcrafts warm Edomae shari, topped with rich Hon-Maguro Otoro, Hokkaido Uni, and delicate 24K gold flakes.",
+      ja: "温かい赤酢のシャリに極上本鮪大トロ、北海道産雲丹をのせ、純金箔をあしらって握りたてをお出しします。",
+    },
     seating: "counter",
   },
   {
     id: "pin-dish-wagyu",
     type: "dish",
-    title: "Miyazaki Wagyu A5 Nướng Đá",
+    title: {
+      vi: "Miyazaki Wagyu A5 Nướng Đá",
+      en: "Volcano Stone Miyazaki Wagyu A5",
+      ja: "宮崎牛 A5 溶岩石焼き",
+    },
     jp: "宮崎牛 A5 · VOLCANO STONE",
-    tag: "Món ăn tại quầy",
+    tag: {
+      vi: "Món ăn tại quầy",
+      en: "Counter Dish",
+      ja: "板前料理",
+    },
     aspectClass: "aspect-square",
     image: heroWagyu,
-    desc: "Thịt bò Miyazaki Wagyu A5 vân mỡ hoa cẩm thạch béo ngậy tan chảy trên phiến đá núi lửa Phú Sĩ, ngập tràn hương vị đậm đà.",
+    desc: {
+      vi: "Thịt bò Miyazaki Wagyu A5 vân mỡ hoa cẩm thạch béo ngậy tan chảy trên phiến đá núi lửa Phú Sĩ, ngập tràn hương vị đậm đà.",
+      en: "Miyazaki A5 Wagyu with intricate marble fat melting on Fuji volcanic stone, bursting with unforgettable rich umami.",
+      ja: "富士山溶岩プレートの上でジュワッと焼き上げる宮崎牛A5。口に入れた瞬間に上質な脂の甘みがとろけます。",
+    },
   },
   {
     id: "pin-space-tatami",
     type: "space",
-    title: "Phòng VIP Tatami Omakase",
+    title: {
+      vi: "Phòng VIP Tatami Omakase",
+      en: "VIP Tatami Private Room",
+      ja: "完全個室 畳掘りごたつ席",
+    },
     jp: "個室掘りごたつ · PRIVATE ROOM",
-    tag: "Không gian Omakase",
+    tag: {
+      vi: "Không gian Omakase",
+      en: "Omakase Space",
+      ja: "空間・個室",
+    },
     aspectClass: "aspect-[4/5]",
     image: omakaseTatami,
-    desc: "Phòng tiệc riêng tư 4-10 khách phong cách Nhật Bản với sàn chiếu Tatami, bàn chìm chân Horigotatsu và cửa trượt Shoji cách âm.",
+    desc: {
+      vi: "Phòng tiệc riêng tư 4-10 khách phong cách Nhật Bản với sàn chiếu Tatami, bàn chìm chân Horigotatsu và cửa trượt Shoji cách âm.",
+      en: "Japanese style private room for 4-10 guests featuring authentic Tatami mats, sunken Horigotatsu table and Shoji screens.",
+      ja: "4〜10名様対応の完全個室。伝統の畳敷きと足を伸ばせる掘りごたつ、防音障子戸で大切なご会食を優雅に演出。",
+    },
     seating: "private",
   },
   {
     id: "pin-dish-sushi",
     type: "dish",
-    title: "Otoro & Trứng Cá Tầm Caviar",
+    title: {
+      vi: "Otoro & Trứng Cá Tầm Caviar",
+      en: "Otoro & Royal Caviar",
+      ja: "本鮪大トロ キャビアのせ",
+    },
     jp: "本鮪大トロ · CAVIAR NIGIRI",
-    tag: "Món ăn tại quầy",
+    tag: {
+      vi: "Món ăn tại quầy",
+      en: "Counter Dish",
+      ja: "板前料理",
+    },
     aspectClass: "aspect-square",
     image: heroSushi,
-    desc: "Sashimi và Nigiri bụng cá ngừ vây xanh hảo hạng kết hợp cùng trứng cá tầm Caviar hoàng gia và vảy vàng lấp lánh.",
+    desc: {
+      vi: "Sashimi và Nigiri bụng cá ngừ vây xanh hảo hạng kết hợp cùng trứng cá tầm Caviar hoàng gia và vảy vàng lấp lánh.",
+      en: "Prime bluefin tuna Otoro sashimi and nigiri crowned with royal sturgeon caviar and glistening gold leaf.",
+      ja: "脂ののった極上本鮪大トロに、贅沢な最高級キャビアと金箔を添えた珠玉のひと品。",
+    },
   },
   {
     id: "pin-space-detail",
     type: "space",
-    title: "Gỗ Bách Hinoki & Gốm Thủ Công",
+    title: {
+      vi: "Gỗ Bách Hinoki & Gốm Thủ Công",
+      en: "Hinoki Wood & Artisanal Ceramics",
+      ja: "檜カウンターと和食器の美",
+    },
     jp: "檜木目の美 · HINOKI DETAIL",
-    tag: "Không gian Omakase",
+    tag: {
+      vi: "Không gian Omakase",
+      en: "Omakase Space",
+      ja: "空間・個室",
+    },
     aspectClass: "aspect-[4/3]",
     image: omakaseCounter,
-    desc: "Đường nét tinh tế của phiến gỗ Hinoki nguyên khối cùng bộ chén đĩa gốm mộc tráng men tạo nên cảm giác ấm áp và tĩnh tại chuẩn phong vị Nhật Bản.",
+    desc: {
+      vi: "Đường nét tinh tế của phiến gỗ Hinoki nguyên khối cùng bộ chén đĩa gốm mộc tráng men tạo nên cảm giác ấm áp và tĩnh tại chuẩn phong vị Nhật Bản.",
+      en: "Refined grain of solid Hinoki cypress paired with handcrafted glazed pottery brings authentic warmth and zen tranquility.",
+      ja: "樹齢を重ねた無垢の檜の木目と、職人が焼き上げた温もりある和陶器が心地よい静寂と安らぎをもたらします。",
+    },
     seating: "counter",
   },
   {
     id: "pin-dish-course",
     type: "dish",
-    title: "Tuyệt Tác Hải Sản Omakase",
+    title: {
+      vi: "Tuyệt Tác Hải Sản Omakase",
+      en: "Edomae Seafood Masterpieces",
+      ja: "豊洲直送 旬の海鮮おまかせ",
+    },
     jp: "おまかせ海鮮 · EDOMAE ART",
-    tag: "Món ăn tại quầy",
+    tag: {
+      vi: "Món ăn tại quầy",
+      en: "Counter Dish",
+      ja: "板前料理",
+    },
     aspectClass: "aspect-[4/3]",
     image: heroOmakase,
-    desc: "100% hải sản được nhập khẩu tươi sống bằng đường hàng không mỗi sáng từ chợ Toyosu Tokyo, phục vụ chuẩn nhiệt độ.",
+    desc: {
+      vi: "100% hải sản được nhập khẩu tươi sống bằng đường hàng không mỗi sáng từ chợ Toyosu Tokyo, phục vụ chuẩn nhiệt độ.",
+      en: "100% live seafood air-flown every morning directly from Toyosu Market Tokyo, served at perfect serving temperature.",
+      ja: "東京豊洲市場から毎朝空輸される活鮮魚。魚種ごとに最適な熟成と温度管理で最高の状態でお届けします。",
+    },
   },
 ];
 
 /* ─── Danh sách các Slide Showroom Omakase trên cùng ─── */
-const OMAKASE_SLIDES = [
+interface RawSlide {
+  id: string;
+  image: string;
+  tag: LocalizedString;
+  jp: string;
+  title: LocalizedString;
+  desc: LocalizedString;
+}
+
+const RAW_OMAKASE_SLIDES: RawSlide[] = [
   {
     id: "slide-counter-mood",
     image: omakaseCounterMood,
-    tag: "Quầy Itamae 12 Ghế Bếp Trưởng",
+    tag: {
+      vi: "Quầy Itamae 12 Ghế Bếp Trưởng",
+      en: "12-Seat Master Itamae Bar",
+      ja: "板前カウンター12席",
+    },
     jp: "板前カウンター · 12 SEATS",
-    title: "Không Gian Quầy Bar Bếp Trưởng",
-    desc: "Không gian 12 ghế gỗ Hinoki độc quyền, nơi thực khách trực diện chiêm ngưỡng từng thao tác dao và nghệ thuật nắn sushi đỉnh cao.",
+    title: {
+      vi: "Không Gian Quầy Bar Bếp Trưởng",
+      en: "Master Chef Counter Bar",
+      ja: "板前カウンターの空間",
+    },
+    desc: {
+      vi: "Không gian 12 ghế gỗ Hinoki độc quyền, nơi thực khách trực diện chiêm ngưỡng từng thao tác dao và nghệ thuật nắn sushi đỉnh cao.",
+      en: "Exclusive 12 Hinoki seats where guests directly appreciate knife skills and the apex of sushi crafting.",
+      ja: "厳選された檜の一枚板カウンター12席。職人の繊細な包丁さばきと美しい握りの技を間近で堪能。",
+    },
   },
   {
     id: "slide-chef-prep",
     image: omakaseChefPrep,
-    tag: "Nghệ Thuật Trình Diễn Tại Chỗ",
+    tag: {
+      vi: "Nghệ Thuật Trình Diễn Tại Chỗ",
+      en: "Live Culinary Artistry",
+      ja: "目の前で魅せる職人技",
+    },
     jp: "職人技 · MASTER CHEF CRAFT",
-    title: "Kỹ Nghệ Nắn Sushi Đỉnh Cao",
-    desc: "Chiêm ngưỡng Bếp trưởng nắn Nigiri, điểm xuyết Uni tươi, Otoro và vảy vàng 24k phục vụ ngay trong tích tắc chuẩn nhiệt độ.",
+    title: {
+      vi: "Kỹ Nghệ Nắn Sushi Đỉnh Cao",
+      en: "Pinnacle of Sushi Craftsmanship",
+      ja: "至高の江戸前寿司の技",
+    },
+    desc: {
+      vi: "Chiêm ngưỡng Bếp trưởng nắn Nigiri, điểm xuyết Uni tươi, Otoro và vảy vàng 24k phục vụ ngay trong tích tắc chuẩn nhiệt độ.",
+      en: "Witness the Head Chef sculpt Nigiri with fresh Uni, rich Otoro and 24K gold leaf, served in an instant at perfect warmth.",
+      ja: "新鮮な雲丹、大トロ、純金箔を散りばめた握りたてのひと貫。温度と鮮度を極めた至福の口福。",
+    },
   },
   {
     id: "slide-tatami",
     image: omakaseTatami,
-    tag: "Phòng VIP Tatami Riêng Tư",
+    tag: {
+      vi: "Phòng VIP Tatami Riêng Tư",
+      en: "Private Tatami VIP Suite",
+      ja: "完全個室 畳掘りごたつ",
+    },
     jp: "個室畳 · PRIVATE TATAMI ROOM",
-    title: "Không Gian Omakase VIP Riêng Tư",
-    desc: "Phòng riêng biệt lập từ 4-10 khách với bàn Horigotatsu chìm ấm cúng cho tiệc ngoại giao và họp mặt gia đình trang trọng.",
+    title: {
+      vi: "Không Gian Omakase VIP Riêng Tư",
+      en: "Private VIP Omakase Setting",
+      ja: "格調高いVIP個室空間",
+    },
+    desc: {
+      vi: "Phòng riêng biệt lập từ 4-10 khách với bàn Horigotatsu chìm ấm cúng cho tiệc ngoại giao và họp mặt gia đình trang trọng.",
+      en: "Secluded suite for 4-10 guests with sunken Horigotatsu table, ideal for diplomatic dinners and intimate family milestones.",
+      ja: "4〜10名様用の静謐な個室。足を楽にできる掘りごたつで、大切な接待やご家族の記念日を特別に演出。",
+    },
   },
   {
     id: "slide-wagyu",
     image: heroWagyu,
-    tag: "Miyazaki Wagyu A5 · Núi Lửa Phú Sĩ",
+    tag: {
+      vi: "Miyazaki Wagyu A5 · Núi Lửa Phú Sĩ",
+      en: "Miyazaki A5 Wagyu · Fuji Stone",
+      ja: "宮崎牛A5 · 富士山溶岩焼き",
+    },
     jp: "宮崎牛 · WAGYU A5 PERFECTION",
-    title: "Bò Wagyu A5 Nướng Đá Núi Lửa",
-    desc: "Vân mỡ cẩm thạch béo ngậy tan chảy trên đầu lưỡi, nướng xèo xèo đánh thức mọi giác quan của thực khách sành ăn.",
+    title: {
+      vi: "Bò Wagyu A5 Nướng Đá Núi Lửa",
+      en: "A5 Wagyu on Volcano Stone",
+      ja: "A5ランク和牛の溶岩石焼き",
+    },
+    desc: {
+      vi: "Vân mỡ cẩm thạch béo ngậy tan chảy trên đầu lưỡi, nướng xèo xèo đánh thức mọi giác quan của thực khách sành ăn.",
+      en: "Delicate marbling melting effortlessly on the palate, sizzling on volcanic stone to awaken all senses.",
+      ja: "極上の霜降りが舌の上ですっととろける芳醇な旨み。熱々の溶岩プレートが五感を心地よく刺激します。",
+    },
   },
   {
     id: "slide-sushi",
     image: heroSushi,
-    tag: "100% Nhập Khẩu Hàng Không",
+    tag: {
+      vi: "100% Nhập Khẩu Hàng Không",
+      en: "100% Air-Flown Fresh Daily",
+      ja: "豊洲より毎朝100%空輸",
+    },
     jp: "江戸前寿司 · EDOMAE CRAFTSMANSHIP",
-    title: "Otoro Vảy Vàng & Nhím Biển Uni",
-    desc: "Bụng cá ngừ Hon-Maguro béo đậm dát vàng 24k kết hợp cùng trứng cá tầm Caviar hoàng đế.",
+    title: {
+      vi: "Otoro Vảy Vàng & Nhím Biển Uni",
+      en: "Gold-Leaf Otoro & Fresh Sea Urchin",
+      ja: "金箔大トロと極上生うに",
+    },
+    desc: {
+      vi: "Bụng cá ngừ Hon-Maguro béo đậm dát vàng 24k kết hợp cùng trứng cá tầm Caviar hoàng đế.",
+      en: "Decadent bluefin tuna Otoro leafed in 24k gold, complemented by imperial sturgeon caviar.",
+      ja: "本鮪大トロに純度24Kの金箔と最高峰キャビアを贅沢に添えた、宮古を象徴するスペシャリテ。",
+    },
   },
 ];
 
 /* ─── 7 Bước thưởng thức Omakase truyền thống ─── */
-const OMAKASE_STEPS = [
-  { step: 1, name: "Sakizuke", vi: "Khai vị tinh tế", desc: "Đánh thức vị giác với nguyên liệu tươi mát" },
-  { step: 2, name: "Otsukuri", vi: "Sashimi hải vị", desc: "Hải sản tươi sống vận chuyển bằng đường hàng không" },
-  { step: 3, name: "Yakimono", vi: "Món nướng than hoa", desc: "Bò Wagyu hoặc Lươn nướng thơm lừng" },
-  { step: 4, name: "Nigiri Edo", vi: "Sushi thủ công", desc: "Nghệ thuật nắn cơm giấm và hải vị quý hiếm" },
-  { step: 5, name: "Wagyu A5", vi: "Bò đá núi lửa", desc: "Vị béo ngậy tan chảy của Wagyu A5 Miyazaki" },
-  { step: 6, name: "Tome-wan", vi: "Canh thanh vị", desc: "Nước dùng Dashi ấm bụng kết thúc món chính" },
-  { step: 7, name: "Mizumono", vi: "Wagashi & Matcha", desc: "Tráng miệng thanh tao khép lại hành trình" },
+interface StepItem {
+  step: number;
+  name: string;
+  title: LocalizedString;
+  desc: LocalizedString;
+}
+
+const OMAKASE_STEPS: StepItem[] = [
+  {
+    step: 1,
+    name: "Sakizuke",
+    title: { vi: "Khai vị tinh tế", en: "Delicate Appetizer", ja: "先付け（前菜）" },
+    desc: {
+      vi: "Đánh thức vị giác với nguyên liệu theo mùa tươi mát",
+      en: "Awakens palate with fresh seasonal ingredients",
+      ja: "旬の味覚で五感を優しく目覚めさせる最初の一品",
+    },
+  },
+  {
+    step: 2,
+    name: "Otsukuri",
+    title: { vi: "Sashimi hải vị", en: "Seasonal Sashimi", ja: "お造り（刺身）" },
+    desc: {
+      vi: "Hải sản tươi sống vận chuyển bằng đường hàng không",
+      en: "Prime seafood air-flown daily from Toyosu Market",
+      ja: "豊洲から直送された鮮魚の洗練されたお造り",
+    },
+  },
+  {
+    step: 3,
+    name: "Yakimono",
+    title: { vi: "Món nướng than hoa", en: "Charcoal Grilled Course", ja: "焼き物" },
+    desc: {
+      vi: "Bò Wagyu hoặc Lươn nướng thơm lừng chuẩn vị",
+      en: "Fragrant grilled Wagyu or glazed Unagi",
+      ja: "備長炭の香ばしさを纏わせた和牛や旬魚の焼き物",
+    },
+  },
+  {
+    step: 4,
+    name: "Nigiri Edo",
+    title: { vi: "Sushi thủ công", en: "Artisan Edomae Sushi", ja: "江戸前握り寿司" },
+    desc: {
+      vi: "Nghệ thuật nắn cơm giấm ấm và hải vị quý hiếm",
+      en: "Craftsmanship of warm shari and rare seafood treasures",
+      ja: "赤酢シャリと極上ネタをその場で握る伝統の技",
+    },
+  },
+  {
+    step: 5,
+    name: "Wagyu A5",
+    title: { vi: "Bò đá núi lửa", en: "Volcano Stone Wagyu", ja: "極上A5和牛" },
+    desc: {
+      vi: "Vị béo ngậy tan chảy của Wagyu A5 Miyazaki",
+      en: "Melting richness of certified Miyazaki A5 Wagyu",
+      ja: "口どけ豊かな宮崎牛A5の上質な脂と赤身の調和",
+    },
+  },
+  {
+    step: 6,
+    name: "Tome-wan",
+    title: { vi: "Canh thanh vị", en: "Finishing Soup", ja: "止椀（お椀）" },
+    desc: {
+      vi: "Nước dùng Dashi ấm bụng kết thúc món chính",
+      en: "Warm rich Dashi broth gently closing the savory journey",
+      ja: "丁寧に引いた出汁でホッとする締めのお吸い物",
+    },
+  },
+  {
+    step: 7,
+    name: "Mizumono",
+    title: { vi: "Wagashi & Matcha", en: "Wagashi & Ceremonial Tea", ja: "水物・甘味" },
+    desc: {
+      vi: "Tráng miệng thanh tao khép lại trọn vẹn hành trình",
+      en: "Refreshing traditional dessert rounding off the feast",
+      ja: "季節の和菓子と香り高い抹茶で締めくくる余韻",
+    },
+  },
 ];
 
 /* ─── Thẻ ảnh phong cách Pinterest Masonry: Chỉ hiển thị ảnh thuần tuý ─── */
@@ -213,12 +454,14 @@ function OmakaseLightboxGallery({
   onClose,
   onSelectIndex,
   onBook,
+  lang,
 }: {
   items: PinterestItem[];
   currentIndex: number;
   onClose: () => void;
   onSelectIndex: (index: number) => void;
   onBook: (item: PinterestItem) => void;
+  lang: "vi" | "en" | "ja";
 }) {
   const current = items[currentIndex] || items[0];
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -262,13 +505,17 @@ function OmakaseLightboxGallery({
               }`}
             />
             <span>
-              {current.type === "space" ? "Không gian Omakase" : "Món ăn nghệ thuật"}
+              {current.type === "space"
+                ? (lang === "ja" ? "空間・個室" : lang === "en" ? "Omakase Space" : "Không gian Omakase")
+                : (lang === "ja" ? "板前料理" : lang === "en" ? "Culinary Art" : "Món ăn nghệ thuật")}
             </span>
           </div>
 
           {current.seating && (
             <span className="rounded-full bg-[var(--gold)]/20 border border-[var(--gold)]/40 px-2.5 py-0.5 text-[10px] font-bold text-[var(--gold)]">
-              {current.seating === "counter" ? "Quầy Bar 12 Ghế" : "Phòng VIP Tatami"}
+              {current.seating === "counter"
+                ? (lang === "ja" ? "カウンター12席" : lang === "en" ? "12-Seat Bar" : "Quầy Bar 12 Ghế")
+                : (lang === "ja" ? "個室畳席" : lang === "en" ? "VIP Tatami Room" : "Phòng VIP Tatami")}
             </span>
           )}
         </div>
@@ -280,7 +527,7 @@ function OmakaseLightboxGallery({
 
           <button
             type="button"
-            aria-label="Đóng Gallery"
+            aria-label="Close"
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md border border-white/20 active:scale-90 transition-all hover:bg-white/25"
           >
@@ -305,7 +552,7 @@ function OmakaseLightboxGallery({
         {/* Nút Prev */}
         <button
           type="button"
-          aria-label="Ảnh trước"
+          aria-label="Previous"
           onClick={goPrev}
           className="absolute left-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xl transition-all active:scale-90 hover:bg-black/80 hover:text-white"
         >
@@ -325,7 +572,7 @@ function OmakaseLightboxGallery({
         {/* Nút Next */}
         <button
           type="button"
-          aria-label="Ảnh tiếp theo"
+          aria-label="Next"
           onClick={goNext}
           className="absolute right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xl transition-all active:scale-90 hover:bg-black/80 hover:text-white"
         >
@@ -384,7 +631,11 @@ function OmakaseLightboxGallery({
           {/* Nút đặt bàn tương ứng với ảnh */}
           <div className="pt-1 flex items-center justify-between gap-3">
             <span className="text-[10.5px] text-zinc-400">
-              Vuốt sang trái/phải để duyệt ảnh
+              {lang === "ja"
+                ? "左右にスワイプして閲覧"
+                : lang === "en"
+                ? "Swipe left/right to browse"
+                : "Vuốt sang trái/phải để duyệt ảnh"}
             </span>
 
             <button
@@ -394,8 +645,8 @@ function OmakaseLightboxGallery({
             >
               <span>
                 {current.type === "space"
-                  ? "Đặt Giữ Chỗ Này"
-                  : "Đặt Bàn Trải Nghiệm"}
+                  ? (lang === "ja" ? "このお席を予約" : lang === "en" ? "Reserve This Space" : "Đặt Giữ Chỗ Này")
+                  : (lang === "ja" ? "コースを予約する" : lang === "en" ? "Book This Experience" : "Đặt Bàn Trải Nghiệm")}
               </span>
               <IconChevronRight size={14} />
             </button>
@@ -430,11 +681,38 @@ export default function OmakasePage() {
   // Trình xem Thư viện ảnh Gallery Lightbox toàn màn hình
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
+  // Danh sách Slides showroom theo ngôn ngữ
+  const localizedSlides = useMemo(() => {
+    return RAW_OMAKASE_SLIDES.map((s) => ({
+      id: s.id,
+      image: s.image,
+      jp: s.jp,
+      tag: s.tag[lang] ?? s.tag.vi,
+      title: s.title[lang] ?? s.title.vi,
+      desc: s.desc[lang] ?? s.desc.vi,
+    }));
+  }, [lang]);
+
+  // Gallery Pinterest items theo ngôn ngữ
+  const localizedPinterestItems = useMemo<PinterestItem[]>(() => {
+    return RAW_OMAKASE_PINTEREST_GALLERY.map((p) => ({
+      id: p.id,
+      type: p.type,
+      jp: p.jp,
+      aspectClass: p.aspectClass,
+      image: p.image,
+      seating: p.seating,
+      title: p.title[lang] ?? p.title.vi,
+      tag: p.tag[lang] ?? p.tag.vi,
+      desc: p.desc[lang] ?? p.desc.vi,
+    }));
+  }, [lang]);
+
   // Phân chia items vào 2 cột zic-zac phong cách Pinterest Masonry
   const filteredPins = useMemo(() => {
-    if (galleryFilter === "all") return OMAKASE_PINTEREST_GALLERY;
-    return OMAKASE_PINTEREST_GALLERY.filter((p) => p.type === galleryFilter);
-  }, [galleryFilter]);
+    if (galleryFilter === "all") return localizedPinterestItems;
+    return localizedPinterestItems.filter((p) => p.type === galleryFilter);
+  }, [localizedPinterestItems, galleryFilter]);
 
   const { col1, col2 } = useMemo(() => {
     const c1: PinterestItem[] = [];
@@ -449,10 +727,10 @@ export default function OmakasePage() {
   // Tự động chuyển slide mỗi 3.8 giây
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % OMAKASE_SLIDES.length);
+      setActiveSlide((prev) => (prev + 1) % localizedSlides.length);
     }, 3800);
     return () => clearInterval(timer);
-  }, []);
+  }, [localizedSlides.length]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
@@ -464,10 +742,10 @@ export default function OmakasePage() {
     const diff = touchStart - touchEnd;
     if (diff > 40) {
       haptic("light");
-      setActiveSlide((prev) => (prev + 1) % OMAKASE_SLIDES.length);
+      setActiveSlide((prev) => (prev + 1) % localizedSlides.length);
     } else if (diff < -40) {
       haptic("light");
-      setActiveSlide((prev) => (prev - 1 + OMAKASE_SLIDES.length) % OMAKASE_SLIDES.length);
+      setActiveSlide((prev) => (prev - 1 + localizedSlides.length) % localizedSlides.length);
     }
     setTouchStart(null);
   };
@@ -523,7 +801,7 @@ export default function OmakasePage() {
             </button>
 
             <button
-              aria-label="Giỏ hàng"
+              aria-label="Cart"
               onClick={() => {
                 haptic("light");
                 navigate("/cart");
@@ -556,7 +834,7 @@ export default function OmakasePage() {
             className="flex h-full w-full transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${activeSlide * 100}%)` }}
           >
-            {OMAKASE_SLIDES.map((slide) => (
+            {localizedSlides.map((slide) => (
               <div
                 key={slide.id}
                 className="relative h-full w-full shrink-0 overflow-hidden"
@@ -592,12 +870,12 @@ export default function OmakasePage() {
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-black/55 backdrop-blur-md border border-white/15 px-2.5 py-0.5 text-[11px] font-mono text-white/90">
             <span className="font-bold text-[var(--gold)]">{activeSlide + 1}</span>
             <span className="opacity-40">/</span>
-            <span>{OMAKASE_SLIDES.length}</span>
+            <span>{localizedSlides.length}</span>
           </div>
 
           {/* Dải Dots chỉ số ở đáy góc phải */}
           <div className="absolute bottom-2.5 right-4 z-10 flex items-center gap-1.5">
-            {OMAKASE_SLIDES.map((_, i) => (
+            {localizedSlides.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Slide ${i + 1}`}
@@ -622,10 +900,18 @@ export default function OmakasePage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="font-display text-[17px] font-bold text-[var(--washi)]">
-                  Lựa Chọn Suất Omakase
+                  {lang === "ja"
+                    ? "おまかせコースの選択"
+                    : lang === "en"
+                    ? "Omakase Course Selection"
+                    : "Lựa Chọn Suất Omakase"}
                 </h2>
                 <div className="text-[11.5px] text-[var(--muted)]">
-                  3 mức giá chuẩn Fine Dining với thực đơn chuẩn bị tỉ mỉ
+                  {lang === "ja"
+                    ? "熟練の技と旬の厳選素材を織り込んだ3つのコース"
+                    : lang === "en"
+                    ? "3 curated fine-dining experiences with distinct master creations"
+                    : "3 mức giá chuẩn Fine Dining với thực đơn chuẩn bị tỉ mỉ"}
                 </div>
               </div>
             </div>
@@ -642,10 +928,35 @@ export default function OmakasePage() {
 
                 const badgeText =
                   s.id === "kaze"
-                    ? "VIP Nhất · Hoàng Gia"
+                    ? (lang === "ja" ? "最高峰・極み" : lang === "en" ? "Royal VIP Tier" : "VIP Nhất · Hoàng Gia")
                     : s.id === "omakase-2m"
-                    ? "Được Chọn Nhiều Nhất"
-                    : "Khởi Đầu Tinh Hoa";
+                    ? (lang === "ja" ? "一番人気" : lang === "en" ? "Most Popular Choice" : "Được Chọn Nhiều Nhất")
+                    : (lang === "ja" ? "精選入門" : lang === "en" ? "Essential Signature" : "Khởi Đầu Tinh Hoa");
+
+                const statusText = active
+                  ? (lang === "ja" ? "選択中" : lang === "en" ? "Selected" : "Đang chọn")
+                  : (lang === "ja" ? "タップして選択" : lang === "en" ? "Tap to select" : "Chạm để chọn");
+
+                const courseSeqTitle =
+                  lang === "ja"
+                    ? `お品書きの流れ（全${courseCount(s)}品）`
+                    : lang === "en"
+                    ? `Course Sequence (${courseCount(s)} Courses)`
+                    : `Trình Tự Thực Đơn (${courseCount(s)} Món)`;
+
+                const courseSeqHint =
+                  lang === "ja"
+                    ? "カウンターにて順次提供"
+                    : lang === "en"
+                    ? "served sequentially at counter"
+                    : "phục vụ tuần tự tại quầy";
+
+                const depositHint =
+                  lang === "ja"
+                    ? "お席の確保に30%のお預かり金（お会計時に相殺）"
+                    : lang === "en"
+                    ? "30% deposit to reserve (deducted from final bill)"
+                    : "Cọc trước 30% giữ chỗ (trừ vào hoá đơn)";
 
                 return (
                   <div
@@ -684,7 +995,7 @@ export default function OmakasePage() {
                           }`}
                         >
                           {active && <IconCheck size={12} />}
-                          <span>{active ? "Đang chọn" : "Chạm để chọn"}</span>
+                          <span>{statusText}</span>
                         </div>
                       </div>
 
@@ -708,7 +1019,8 @@ export default function OmakasePage() {
                               {vnd(s.price, lang)}
                             </div>
                             <div className="text-[9.5px] text-zinc-300 mt-0.5">
-                              {t.common.perGuest} · {courseCount(s)} món
+                              {t.common.perGuest} · {courseCount(s)}{" "}
+                              {lang === "ja" ? "品" : lang === "en" ? "dishes" : "món"}
                             </div>
                           </div>
                         </div>
@@ -728,9 +1040,9 @@ export default function OmakasePage() {
                       {active ? (
                         <div className="space-y-2 pt-1 border-t border-[var(--line)] animate-fade-in">
                           <div className="flex items-center justify-between text-[11.5px] font-bold text-[var(--gold)] uppercase tracking-wider">
-                            <span>Trình Tự Thực Đơn ({courseCount(s)} Món)</span>
+                            <span>{courseSeqTitle}</span>
                             <span className="text-[10.5px] text-[var(--faint)] lowercase font-normal">
-                              phục vụ tuần tự tại quầy
+                              {courseSeqHint}
                             </span>
                           </div>
 
@@ -765,7 +1077,7 @@ export default function OmakasePage() {
 
                           <div className="pt-2 flex items-center justify-between gap-2 border-t border-[var(--line)] text-[11.5px]">
                             <span className="text-[var(--faint)]">
-                              Cọc trước 30% giữ chỗ (trừ vào hoá đơn)
+                              {depositHint}
                             </span>
                             <button
                               type="button"
@@ -775,7 +1087,9 @@ export default function OmakasePage() {
                               }}
                               className="flex items-center gap-1 font-bold text-[var(--gold)] hover:underline shrink-0"
                             >
-                              <span>Chi tiết set</span>
+                              <span>
+                                {lang === "ja" ? "詳細を見る" : lang === "en" ? "Course details" : "Chi tiết set"}
+                              </span>
                               <IconChevronRight size={12} />
                             </button>
                           </div>
@@ -784,13 +1098,17 @@ export default function OmakasePage() {
                         /* Khi chưa active: Hiển thị tóm tắt món nổi bật và nút Xem chi tiết */
                         <div className="pt-2 border-t border-[var(--line)] flex items-center justify-between text-[11.5px]">
                           <div className="flex items-center gap-1.5 text-[var(--muted)] truncate max-w-[72%]">
-                            <span className="text-[var(--gold)] font-bold">Gồm:</span>
+                            <span className="text-[var(--gold)] font-bold">
+                              {lang === "ja" ? "内容:" : lang === "en" ? "Includes:" : "Gồm:"}
+                            </span>
                             <span className="truncate">
                               {s.courses.map((c) => c.section.split("(")[0].trim()).join(" · ")}
                             </span>
                           </div>
                           <span className="font-bold text-[var(--gold)] shrink-0 flex items-center gap-0.5">
-                            <span>Chọn xem menu</span>
+                            <span>
+                              {lang === "ja" ? "メニューを見る" : lang === "en" ? "View menu" : "Chọn xem menu"}
+                            </span>
                             <IconChevronRight size={12} />
                           </span>
                         </div>
@@ -809,26 +1127,38 @@ export default function OmakasePage() {
                 ギャラリー · PINTEREST GALLERY
               </div>
               <h3 className="font-display text-[18px] font-bold text-[var(--washi)] leading-tight">
-                Không Gian Omakase & Món Ăn
+                {lang === "ja"
+                  ? "空間・個室とお料理ギャラリー"
+                  : lang === "en"
+                  ? "Omakase Spaces & Culinary Art"
+                  : "Không Gian Omakase & Món Ăn"}
               </h3>
               <p className="text-[12px] text-[var(--muted)] mt-0.5">
-                Chỉ quầy Itamae 12 chỗ, phòng VIP Tatami và các tuyệt tác sushi chế tác trực diện
+                {lang === "ja"
+                  ? "板前カウンター12席、個室畳席と職人が目の前で握る極上寿司"
+                  : lang === "en"
+                  ? "Exclusive 12-seat Hinoki counter, private Tatami rooms and master sushi"
+                  : "Chỉ quầy Itamae 12 chỗ, phòng VIP Tatami và các tuyệt tác sushi chế tác trực diện"}
               </p>
             </div>
 
             {/* Filter Tabs phong cách Pinterest */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 mb-3.5">
               {[
-                { id: "all", label: "Tất cả", count: OMAKASE_PINTEREST_GALLERY.length },
+                {
+                  id: "all",
+                  label: lang === "ja" ? "すべて" : lang === "en" ? "All" : "Tất cả",
+                  count: localizedPinterestItems.length,
+                },
                 {
                   id: "space",
-                  label: "Không gian Omakase",
-                  count: OMAKASE_PINTEREST_GALLERY.filter((p) => p.type === "space").length,
+                  label: lang === "ja" ? "空間・個室" : lang === "en" ? "Spaces" : "Không gian Omakase",
+                  count: localizedPinterestItems.filter((p) => p.type === "space").length,
                 },
                 {
                   id: "dish",
-                  label: "Món ăn tại quầy",
-                  count: OMAKASE_PINTEREST_GALLERY.filter((p) => p.type === "dish").length,
+                  label: lang === "ja" ? "お料理" : lang === "en" ? "Dishes" : "Món ăn tại quầy",
+                  count: localizedPinterestItems.filter((p) => p.type === "dish").length,
                 },
               ].map((tab) => {
                 const active = galleryFilter === tab.id;
@@ -902,10 +1232,18 @@ export default function OmakasePage() {
               </span>
               <div>
                 <h4 className="font-display text-[14.5px] font-bold text-[var(--washi)]">
-                  Quy Trình Phục Vụ Chuẩn Nhật
+                  {lang === "ja"
+                    ? "伝統的なおまかせの7段階"
+                    : lang === "en"
+                    ? "Traditional 7-Stage Omakase"
+                    : "Quy Trình Phục Vụ Chuẩn Nhật"}
                 </h4>
                 <div className="text-[11px] text-[var(--muted)]">
-                  Nhịp điệu ẩm thực được cân đo hoàn hảo bởi Bếp trưởng
+                  {lang === "ja"
+                    ? "総料理長が細部まで調和させた美食のリズム"
+                    : lang === "en"
+                    ? "Pacing orchestrated with precision by the Head Chef"
+                    : "Nhịp điệu ẩm thực được cân đo hoàn hảo bởi Bếp trưởng"}
                 </div>
               </div>
             </div>
@@ -921,9 +1259,11 @@ export default function OmakasePage() {
                       {s.name}
                     </span>
                     <span className="mx-1.5 text-[var(--faint)]">·</span>
-                    <span className="text-[12px] text-[var(--muted)]">{s.vi}</span>
+                    <span className="text-[12px] text-[var(--muted)]">
+                      {s.title[lang] ?? s.title.vi}
+                    </span>
                     <div className="text-[10.5px] text-[var(--faint)] mt-0.2">
-                      {s.desc}
+                      {s.desc[lang] ?? s.desc.vi}
                     </div>
                   </div>
                 </div>
@@ -951,7 +1291,7 @@ export default function OmakasePage() {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-medium text-[var(--muted)]">
-                Đang chọn:
+                {lang === "ja" ? "選択中:" : lang === "en" ? "Selected:" : "Đang chọn:"}
               </span>
               <span className="font-display text-[13px] font-bold text-[var(--washi)] truncate">
                 {currentSet?.name}
@@ -961,7 +1301,7 @@ export default function OmakasePage() {
               <span className="font-display text-[18px] font-extrabold text-[var(--gold)]">
                 {vnd(currentSet?.price ?? 2000000, lang)}
               </span>
-              <span className="text-[11px] text-[var(--faint)]">/ khách</span>
+              <span className="text-[11px] text-[var(--faint)]">{t.common.perGuest}</span>
             </div>
           </div>
 
@@ -969,7 +1309,9 @@ export default function OmakasePage() {
             onClick={() => handleBookNow()}
             className="flex items-center justify-center gap-1.5 rounded-full bg-[var(--shu)] px-6 py-3 font-display text-[13.5px] font-bold text-white shadow-lg shadow-[var(--shu)]/30 active:scale-95 transition-transform hover:brightness-110 shrink-0"
           >
-            <span>ĐẶT BÀN NGAY</span>
+            <span>
+              {lang === "ja" ? "今すぐ予約" : lang === "en" ? "BOOK NOW" : "ĐẶT BÀN NGAY"}
+            </span>
             <IconChevronRight size={16} />
           </button>
         </div>
@@ -980,6 +1322,7 @@ export default function OmakasePage() {
         <OmakaseLightboxGallery
           items={filteredPins}
           currentIndex={galleryIndex}
+          lang={lang}
           onClose={() => setGalleryIndex(null)}
           onSelectIndex={(idx) => setGalleryIndex(idx)}
           onBook={(item) => {

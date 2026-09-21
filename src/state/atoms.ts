@@ -146,19 +146,34 @@ export const themePrefAtom = atomWithStorage<ThemePreference>(
 );
 
 /* ─────────────── Tích Điểm & Hội Viên (Miyako VIP Club) ─────────────── */
-export type MembershipTier = "silver" | "gold" | "platinum";
-
-export interface PointsHistoryItem {
-  id: string;
-  title: string;
-  desc: string;
-  date: string;
-  points: number; // số dương: tích điểm, số âm: đổi quà
-  type: "order" | "booking" | "redeem" | "reward" | "bonus";
-}
+export type { CustomerVoucher, MembershipTier, PointsHistoryItem } from "@/types";
+import type { CustomerVoucher, MembershipTier, PointsHistoryItem } from "@/types";
 
 export const userPointsAtom = atomWithStorage<number>("miyako.points", 1250);
 export const userTierAtom = atomWithStorage<MembershipTier>("miyako.tier", "gold");
+export const userCustomerIdAtom = atomWithStorage<string | null>("miyako.customer_id", null);
+
+export const userVouchersAtom = atomWithStorage<CustomerVoucher[]>(
+  "miyako.vouchers",
+  [
+    {
+      id: "v-demo-1",
+      code: "RD-WAGYU50",
+      giftTitle: "Voucher Giảm 50.000đ",
+      giftCategory: "voucher",
+      worthText: "Trị giá 50.000đ",
+      status: "active",
+      createdAt: new Date().toISOString(),
+    },
+  ]
+);
+
+export const dailyCheckinDateAtom = atomWithStorage<string>(
+  "miyako.last_checkin_date",
+  ""
+);
+
+export const appliedVoucherAtom = atom<CustomerVoucher | null>(null);
 
 export const pointsHistoryAtom = atomWithStorage<PointsHistoryItem[]>(
   "miyako.points_history",
@@ -211,7 +226,7 @@ export const redeemGiftAtom = atom(
   (
     get,
     set,
-    input: { id: string; title: string; pointsCost: number }
+    input: { id: string; title: string; pointsCost: number; code?: string; category?: string }
   ): boolean => {
     const currentPoints = get(userPointsAtom);
     if (currentPoints < input.pointsCost) return false;
@@ -233,8 +248,22 @@ export const redeemGiftAtom = atom(
       type: "redeem",
     };
 
+    const voucherCode = input.code || "RD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newVoucher: CustomerVoucher = {
+      id: "v-" + Date.now(),
+      code: voucherCode,
+      giftId: input.id,
+      giftTitle: input.title,
+      giftCategory: input.category || "voucher",
+      worthText: `Đổi bằng ${input.pointsCost} điểm`,
+      status: "active",
+      createdAt: now.toISOString(),
+    };
+
     set(pointsHistoryAtom, [newHistory, ...get(pointsHistoryAtom)]);
+    set(userVouchersAtom, [newVoucher, ...get(userVouchersAtom)]);
     return true;
   }
 );
+
 

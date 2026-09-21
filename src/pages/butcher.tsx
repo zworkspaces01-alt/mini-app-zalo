@@ -46,54 +46,147 @@ const SUB_FILTERS: SubFilter[] = [
 ];
 
 /* ─── Danh sách từ khoá placeholder chuyển động liên tục cho Butcher ─── */
-const BUTCHER_SEARCH_PLACEHOLDERS = [
-  "Tìm Bò Wagyu A5 nướng than...",
-  "Tìm Bò Mỹ Prime cắt Steak...",
-  "Tìm Set thịt nướng BBQ tại gia...",
-  "Tìm Ba chỉ bò lẩu Shabu Shabu...",
-  "Tìm Sốt ướp Yakiniku đặc biệt...",
-  "Tìm Lõi nạc vai Wagyu A5...",
-];
+const BUTCHER_SEARCH_PLACEHOLDERS = {
+  vi: [
+    "Tìm Bò Wagyu A5 nướng than...",
+    "Tìm Bò Mỹ Prime cắt Steak...",
+    "Tìm Set thịt nướng BBQ tại gia...",
+    "Tìm Ba chỉ bò lẩu Shabu Shabu...",
+    "Tìm Sốt ướp Yakiniku đặc biệt...",
+    "Tìm Lõi nạc vai Wagyu A5...",
+  ],
+  en: [
+    "Search Charcoal Grilled A5 Wagyu...",
+    "Search US Prime Steak Cut...",
+    "Search Home BBQ Meat Box...",
+    "Search Shabu Shabu Beef Belly...",
+    "Search Specialty Yakiniku Sauce...",
+    "Search A5 Wagyu Chuck Roll...",
+  ],
+  ja: [
+    "備長炭焼きA5和牛を探す...",
+    "USプライム ステーキカットを探す...",
+    "おうち焼肉・BBQセットを探す...",
+    "しゃぶしゃぶ用牛バラ肉を探す...",
+    "宮古特製焼肉のタレを探す...",
+    "A5ランク和牛肩ロースを探す...",
+  ],
+};
 
 /* ─── Danh sách banner quảng cáo chuyên biệt cho Wagyu Butcher ─── */
-const BUTCHER_BANNERS = [
+interface RawButcherBanner {
+  id: string;
+  tag: { vi: string; en: string; ja: string };
+  title: { vi: string; en: string; ja: string };
+  sub: { vi: string; en: string; ja: string };
+  cta: { vi: string; en: string; ja: string };
+  filterTab: ButcherTab;
+  img: string;
+  color: string;
+}
+
+const RAW_BUTCHER_BANNERS: RawButcherBanner[] = [
   {
     id: "wagyu-a5",
-    tag: "WAGYU A5 NHẬT BẢN",
-    title: "Vân Mỡ Cẩm Thạch BMS 10-12",
-    sub: "Nhập khẩu nguyên con từ Miyazaki, cắt lát theo yêu cầu Steak / Nướng / Lẩu",
-    cta: "Khám phá Wagyu A5",
-    filterTab: "wagyu" as ButcherTab,
+    tag: {
+      vi: "WAGYU A5 NHẬT BẢN",
+      en: "JAPANESE A5 WAGYU",
+      ja: "日本産 A5ランク和牛",
+    },
+    title: {
+      vi: "Vân Mỡ Cẩm Thạch BMS 10-12",
+      en: "Marble Fat Score BMS 10-12",
+      ja: "最高峰 BMS 10-12 の極上霜降り",
+    },
+    sub: {
+      vi: "Nhập khẩu nguyên con từ Miyazaki, cắt lát theo yêu cầu Steak / Nướng / Lẩu",
+      en: "Directly imported from Miyazaki, custom sliced for Steak, Grill, or Shabu",
+      ja: "宮崎県より産地直送。ステーキ・焼肉・しゃぶしゃぶ用に無料カット",
+    },
+    cta: {
+      vi: "Khám phá Wagyu A5",
+      en: "Explore A5 Wagyu",
+      ja: "A5和牛を見る",
+    },
+    filterTab: "wagyu",
     img: heroWagyu,
     color: "from-[#7b0808]/90 via-black/50 to-transparent",
   },
   {
     id: "hotpot-box",
-    tag: "SET TIỆC TẠI GIA",
-    title: "Thịt Nướng BBQ & Lẩu Shabu",
-    sub: "Tặng kèm nước dùng hầm 12h, rau củ và sốt chấm mè rang chuẩn vị",
-    cta: "Xem Set Nướng / Lẩu",
-    filterTab: "box" as ButcherTab,
+    tag: {
+      vi: "SET TIỆC TẠI GIA",
+      en: "HOME FEAST SET",
+      ja: "おうち贅沢セット",
+    },
+    title: {
+      vi: "Thịt Nướng BBQ & Lẩu Shabu",
+      en: "BBQ Grill & Shabu Hotpot Box",
+      ja: "特選 焼肉＆しゃぶしゃぶセット",
+    },
+    sub: {
+      vi: "Tặng kèm nước dùng hầm 12h, rau củ và sốt chấm mè rang chuẩn vị",
+      en: "Free 12h simmered Dashi broth, fresh vegetables, and roasted sesame sauce",
+      ja: "12時間煮込んだ特製出汁、季節の野菜、胡麻だれを無料でお届け",
+    },
+    cta: {
+      vi: "Xem Set Nướng / Lẩu",
+      en: "View Grill / Shabu Sets",
+      ja: "セットを見る",
+    },
+    filterTab: "box",
     img: heroHotpot,
     color: "from-[#2e1704]/90 via-black/50 to-transparent",
   },
   {
     id: "us-prime",
-    tag: "US PRIME BEEF",
-    title: "Bò Mỹ Prime Cao Cấp",
-    sub: "Thăn lưng & dẻ sườn mềm mọng, ngọt đậm cho bữa tiệc gia đình",
-    cta: "Xem Bò Mỹ Prime",
-    filterTab: "us" as ButcherTab,
+    tag: {
+      vi: "US PRIME BEEF",
+      en: "US PRIME BEEF",
+      ja: "US プライムビーフ",
+    },
+    title: {
+      vi: "Bò Mỹ Prime Cao Cấp",
+      en: "Premium US Prime Beef",
+      ja: "厳選 USプライムビーフ",
+    },
+    sub: {
+      vi: "Thăn lưng & dẻ sườn mềm mọng, ngọt đậm cho bữa tiệc gia đình",
+      en: "Ribeye & short ribs juicy, rich flavor for family gatherings",
+      ja: "リブアイや骨付きカルビなど、ご家庭でのごちそうに最適な旨味",
+    },
+    cta: {
+      vi: "Xem Bò Mỹ Prime",
+      en: "View US Prime Beef",
+      ja: "USプライムを見る",
+    },
+    filterTab: "us",
     img: heroDon,
     color: "from-black/85 via-black/45 to-transparent",
   },
   {
     id: "fresh-delivery",
-    tag: "GIAO HỎA TỐC 2H",
-    title: "Đóng Khay Khí Trơ & Đá Gel",
-    sub: "Giữ trọn vẹn độ tươi ngon và nhiệt độ lạnh sâu tới tận tay khách hàng",
-    cta: "Đặt mua giao ngay",
-    filterTab: "all" as ButcherTab,
+    tag: {
+      vi: "GIAO HỎA TỐC 2H",
+      en: "2-HOUR EXPRESS",
+      ja: "市内2時間スピード配達",
+    },
+    title: {
+      vi: "Đóng Khay Khí Trơ & Đá Gel",
+      en: "Thermal Gel & Vacuum Tray",
+      ja: "保冷剤入り真空パック包装",
+    },
+    sub: {
+      vi: "Giữ trọn vẹn độ tươi ngon và nhiệt độ lạnh sâu tới tận tay khách hàng",
+      en: "Maintaining peak chill freshness straight to your kitchen table",
+      ja: "新鮮な美味しさと冷温を損なわずご家庭の食卓まで直送",
+    },
+    cta: {
+      vi: "Đặt mua giao ngay",
+      en: "Order Delivery",
+      ja: "今すぐ注文する",
+    },
+    filterTab: "all",
     img: space,
     color: "from-[#0d1f38]/90 via-black/50 to-transparent",
   },
@@ -118,28 +211,43 @@ export default function ButcherPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
+  const localizedBanners = useMemo(() => {
+    return RAW_BUTCHER_BANNERS.map((b) => ({
+      id: b.id,
+      tag: b.tag[lang] ?? b.tag.vi,
+      title: b.title[lang] ?? b.title.vi,
+      sub: b.sub[lang] ?? b.sub.vi,
+      cta: b.cta[lang] ?? b.cta.vi,
+      filterTab: b.filterTab,
+      img: b.img,
+      color: b.color,
+    }));
+  }, [lang]);
+
+  const currentPlaceholders = useMemo(() => {
+    return BUTCHER_SEARCH_PLACEHOLDERS[lang] ?? BUTCHER_SEARCH_PLACEHOLDERS.vi;
+  }, [lang]);
+
   /* Tự động chuyển banner sau mỗi 3.8s */
   useEffect(() => {
     if (searchQuery.trim()) return;
     const interval = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % BUTCHER_BANNERS.length);
+      setActiveSlide((prev) => (prev + 1) % localizedBanners.length);
     }, 3800);
     return () => clearInterval(interval);
-  }, [searchQuery]);
+  }, [searchQuery, localizedBanners.length]);
 
   /* Chuyển động thay đổi placeholder liên tục mỗi 3.2 giây */
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderFade(false);
       setTimeout(() => {
-        setPlaceholderIndex(
-          (prev) => (prev + 1) % BUTCHER_SEARCH_PLACEHOLDERS.length
-        );
+        setPlaceholderIndex((prev) => (prev + 1) % currentPlaceholders.length);
         setPlaceholderFade(true);
       }, 250);
     }, 3200);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPlaceholders.length]);
 
   const handleScan = async () => {
     const content = await scanTableQR();
@@ -204,7 +312,7 @@ export default function ButcherPage() {
 
             {/* Nút giỏ hàng có badge đỏ */}
             <button
-              aria-label="Giỏ hàng"
+              aria-label="Cart"
               onClick={() => {
                 haptic("light");
                 navigate("/cart");
@@ -230,9 +338,9 @@ export default function ButcherPage() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!searchQuery.trim()) {
-                const term = BUTCHER_SEARCH_PLACEHOLDERS[placeholderIndex]
-                  .replace(/^Tìm\s+/, "")
-                  .replace(/\.\.\.$/, "");
+                const term = currentPlaceholders[placeholderIndex]
+                  .replace(/^(Tìm|Search)\s+/, "")
+                  .replace(/\s*(を探す)?\.\.\.$/, "");
                 setSearchQuery(term);
               }
               haptic("light");
@@ -260,7 +368,7 @@ export default function ButcherPage() {
                     }`}
                   >
                     <span className="truncate">
-                      {BUTCHER_SEARCH_PLACEHOLDERS[placeholderIndex]}
+                      {currentPlaceholders[placeholderIndex]}
                     </span>
                   </div>
                 )}
@@ -269,7 +377,7 @@ export default function ButcherPage() {
               {searchQuery && (
                 <button
                   type="button"
-                  aria-label="Xóa tìm kiếm"
+                  aria-label="Clear"
                   onClick={() => {
                     haptic("light");
                     setSearchQuery("");
@@ -286,7 +394,7 @@ export default function ButcherPage() {
               type="submit"
               className="h-[36px] px-3.5 rounded-full bg-[var(--shu)] text-[12px] font-bold text-white shadow-sm active:scale-95 transition-transform shrink-0 flex items-center justify-center z-20"
             >
-              Tìm kiếm
+              {lang === "ja" ? "検索" : lang === "en" ? "Search" : "Tìm kiếm"}
             </button>
           </form>
         </div>
@@ -336,10 +444,10 @@ export default function ButcherPage() {
                 const diff = e.changedTouches[0].clientX - touchStartX;
                 if (diff > 40) {
                   haptic("light");
-                  setActiveSlide((prev) => (prev - 1 + BUTCHER_BANNERS.length) % BUTCHER_BANNERS.length);
+                  setActiveSlide((prev) => (prev - 1 + localizedBanners.length) % localizedBanners.length);
                 } else if (diff < -40) {
                   haptic("light");
-                  setActiveSlide((prev) => (prev + 1) % BUTCHER_BANNERS.length);
+                  setActiveSlide((prev) => (prev + 1) % localizedBanners.length);
                 }
                 setTouchStartX(null);
               }}
@@ -348,7 +456,7 @@ export default function ButcherPage() {
                 className="flex transition-transform duration-500 ease-out"
                 style={{ transform: `translateX(-${activeSlide * 100}%)` }}
               >
-                {BUTCHER_BANNERS.map((b) => (
+                {localizedBanners.map((b) => (
                   <div
                     key={b.id}
                     onClick={() => {
@@ -386,7 +494,7 @@ export default function ButcherPage() {
 
               {/* Dots chỉ số slide */}
               <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5 z-10">
-                {BUTCHER_BANNERS.map((_, idx) => (
+                {localizedBanners.map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
@@ -409,101 +517,103 @@ export default function ButcherPage() {
         {/* ── Giới thiệu dịch vụ Butcher cao cấp (ẩn khi đang tìm kiếm) ── */}
         {!searchQuery.trim() && (
           <div className="mb-5 rounded-2xl border border-[var(--line-strong)] bg-gradient-to-b from-[var(--surface-2)] via-[var(--surface)] to-[var(--surface-2)] p-4 shadow-sm">
-          {/* Tiêu đề & Icon 3D thịt Wagyu */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--gold)]/30 bg-gradient-to-br from-[var(--gold-dim)] to-[var(--surface-3)] p-1 shadow-sm">
-              <Icon3DMeat size={36} />
+            {/* Tiêu đề & Icon 3D thịt Wagyu */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--gold)]/30 bg-gradient-to-br from-[var(--gold-dim)] to-[var(--surface-3)] p-1 shadow-sm">
+                <Icon3DMeat size={36} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-[var(--gold)]/15 border border-[var(--gold)]/30 px-2.5 py-0.5 text-[9.5px] font-bold tracking-wider text-[var(--gold)] uppercase">
+                    {t.butcher.serviceTag}
+                  </span>
+                </div>
+                <h2 className="mt-1 font-display text-[16.5px] font-bold text-[var(--washi)] tracking-wide">
+                  {t.butcher.shopName}
+                </h2>
+                <div className="jp text-[11px] text-[var(--gold)]">
+                  宮古 和牛精肉店 · {t.butcher.subtitle}
+                </div>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-[var(--gold)]/15 border border-[var(--gold)]/30 px-2.5 py-0.5 text-[9.5px] font-bold tracking-wider text-[var(--gold)] uppercase">
-                  A5 Wagyu Specialist
+
+            {/* Đoạn mô tả dịch vụ */}
+            <p className="mt-2.5 text-[12.5px] leading-relaxed text-[var(--muted)]">
+              {t.butcher.desc}
+            </p>
+
+            {/* Các tùy chọn cắt lát nổi bật */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11.5px]">
+              <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
+                Steak 2.5cm
+              </span>
+              <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
+                Yakiniku 3-4mm
+              </span>
+              <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
+                {lang === "ja" ? "しゃぶしゃぶ 1.5mm" : lang === "en" ? "Shabu 1.5mm" : "Lẩu Shabu 1.5mm"}
+              </span>
+              <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
+                {lang === "ja" ? "ブロック肉" : lang === "en" ? "Whole Block" : "Nguyên tảng"}
+              </span>
+            </div>
+
+            {/* 3 Tiêu chí dịch vụ (liền mạch, không chia card) */}
+            <div className="relative z-10 mt-3.5 grid grid-cols-3 divide-x divide-[var(--line)] border-t border-[var(--line)] pt-3 text-center">
+              {/* 1. Giữ lạnh 48h */}
+              <div className="flex flex-col items-center px-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 mb-1">
+                  <Icon3DSnowflake size={24} />
+                </div>
+                <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
+                  {lang === "ja" ? "48時間保冷" : lang === "en" ? "Cold-chain 48h" : "Giữ lạnh 48h"}
+                </span>
+                <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
+                  {lang === "ja" ? "保冷剤入りパック" : lang === "en" ? "Sterile Gel Packs" : "Đá gel tiệt trùng"}
                 </span>
               </div>
-              <h2 className="mt-1 font-display text-[16.5px] font-bold text-[var(--washi)] tracking-wide">
-                Miyako Wagyu Butcher Shop
-              </h2>
-              <div className="jp text-[11px] text-[var(--gold)]">
-                宮古 和牛精肉店 · Thịt tươi sơ chế theo yêu cầu
+
+              {/* 2. Cắt theo món */}
+              <div className="flex flex-col items-center px-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-1">
+                  <Icon3DKnife size={24} />
+                </div>
+                <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
+                  {lang === "ja" ? "オーダーカット" : lang === "en" ? "Custom Cut" : "Cắt theo món"}
+                </span>
+                <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
+                  {lang === "ja" ? "ステーキ・焼肉・鍋" : lang === "en" ? "Steak/Grill/Shabu" : "Steak/Nướng/Lẩu"}
+                </span>
+              </div>
+
+              {/* 3. Giao tận nơi */}
+              <div className="flex flex-col items-center px-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-1">
+                  <Icon3DDelivery size={24} />
+                </div>
+                <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
+                  {lang === "ja" ? "スピード配達" : lang === "en" ? "Doorstep Delivery" : "Giao tận nơi"}
+                </span>
+                <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
+                  {lang === "ja" ? "店頭受け取り対応" : lang === "en" ? "Or store pickup" : "Hoặc lấy tại quán"}
+                </span>
               </div>
             </div>
           </div>
-
-          {/* Đoạn mô tả dịch vụ */}
-          <p className="mt-2.5 text-[12.5px] leading-relaxed text-[var(--muted)]">
-            {lang === "vi"
-              ? "Thịt bò Wagyu Nhật Bản A5 & Bò Mỹ Prime cắt tươi trong ngày. Đóng khay hút chân không tiệt trùng kèm đá gel giữ nhiệt chuẩn tươi ngon."
-              : lang === "ja"
-              ? "厳選されたA5ランク日本産和牛とUSプライムビーフ。ステーキ、焼肉、しゃぶしゃぶ用など、ご希望の厚さに無料カット。保冷剤入り真空パックでお届け。"
-              : "Fresh Japanese A5 Wagyu & US Prime beef cut daily to order. Vacuum-sealed with thermal gel ice packs for guaranteed freshness."}
-          </p>
-
-          {/* Các tùy chọn cắt lát nổi bật */}
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11.5px]">
-            <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
-              Steak 2.5cm
-            </span>
-            <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
-              Yakiniku 3-4mm
-            </span>
-            <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
-              Lẩu Shabu 1.5mm
-            </span>
-            <span className="rounded-lg bg-[var(--surface-3)] border border-[var(--line)] px-2.5 py-1 font-medium text-[var(--washi)] shadow-2xs">
-              Nguyên tảng
-            </span>
-          </div>
-
-          {/* 3 Tiêu chí dịch vụ (liền mạch, không chia card) */}
-          <div className="relative z-10 mt-3.5 grid grid-cols-3 divide-x divide-[var(--line)] border-t border-[var(--line)] pt-3 text-center">
-            {/* 1. Giữ lạnh 48h */}
-            <div className="flex flex-col items-center px-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 mb-1">
-                <Icon3DSnowflake size={24} />
-              </div>
-              <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
-                Giữ lạnh 48h
-              </span>
-              <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
-                Đá gel tiệt trùng
-              </span>
-            </div>
-
-            {/* 2. Cắt theo món */}
-            <div className="flex flex-col items-center px-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-1">
-                <Icon3DKnife size={24} />
-              </div>
-              <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
-                Cắt theo món
-              </span>
-              <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
-                Steak/Nướng/Lẩu
-              </span>
-            </div>
-
-            {/* 3. Giao tận nơi */}
-            <div className="flex flex-col items-center px-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-1">
-                <Icon3DDelivery size={24} />
-              </div>
-              <span className="text-[11.5px] font-bold text-[var(--washi)] leading-tight">
-                Giao tận nơi
-              </span>
-              <span className="mt-0.5 text-[9.5px] text-[var(--faint)]">
-                Hoặc lấy tại quán
-              </span>
-            </div>
-          </div>
-        </div>
         )}
 
         {/* ── Danh sách thịt & sản phẩm ── */}
         {visible.length === 0 ? (
           <EmptyState
             kanji="肉"
-            title="Đang cập nhật sản phẩm"
-            hint="Vui lòng quay lại sau hoặc liên hệ nhà hàng để được cắt theo yêu cầu."
+            title={lang === "ja" ? "商品準備中" : lang === "en" ? "Updating Products" : "Đang cập nhật sản phẩm"}
+            hint={
+              lang === "ja"
+                ? "しばらくしてから再度アクセスするか、特注カットはお問い合わせください。"
+                : lang === "en"
+                ? "Please check back later or contact us for custom cuts."
+                : "Vui lòng quay lại sau hoặc liên hệ nhà hàng để được cắt theo yêu cầu."
+            }
           />
         ) : (
           <DishGrid
@@ -514,7 +624,11 @@ export default function ButcherPage() {
         )}
 
         <div className="mt-5 text-center text-[11.5px] text-[var(--faint)]">
-          ✨ Miyako bảo đảm 100% thịt bò Wagyu nhập khẩu chính ngạch Nhật Bản
+          {lang === "ja"
+            ? "✨ 宮古は日本産黒毛和牛100%正規輸入品であることを保証いたします"
+            : lang === "en"
+            ? "✨ Miyako guarantees 100% officially imported authentic Japanese Wagyu"
+            : "✨ Miyako bảo đảm 100% thịt bò Wagyu nhập khẩu chính ngạch Nhật Bản"}
         </div>
       </div>
 

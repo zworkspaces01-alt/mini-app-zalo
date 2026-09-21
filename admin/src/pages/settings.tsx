@@ -28,6 +28,7 @@ import {
 } from "@/lib/supabase";
 import LanguagePanel from "@/components/language-panel";
 import BannerPanel from "@/components/banner-panel";
+import TelegramPanel from "@/components/telegram-panel";
 import {
   TranslationEditor,
   fromI18nDraft,
@@ -43,6 +44,7 @@ type Tab =
   | "tables"
   | "seats"
   | "banners"
+  | "telegram"
   | "staff"
   | "language";
 
@@ -53,6 +55,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "tables", label: "Bàn" },
   { key: "seats", label: "Ghế quầy" },
   { key: "banners", label: "Banner & Media" },
+  { key: "telegram", label: "Telegram Bot" },
   { key: "staff", label: "Nhân sự" },
   { key: "language", label: "Ngôn ngữ" },
 ];
@@ -1341,6 +1344,9 @@ export default function SettingsPage() {
 
       {/* ── Banner chiến dịch & Media ── */}
       {tab === "banners" && <BannerPanel />}
+
+      {/* ── Thông Báo Telegram Bot ── */}
+      {tab === "telegram" && <TelegramPanel />}
 
       <Modal
         open={!!tableDraft}

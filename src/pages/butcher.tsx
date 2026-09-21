@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/icons-3d";
 import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
+import { useScrollSearchBar } from "@/hooks/use-scroll-search-bar";
 import { useLang, useT, useTr } from "@/i18n";
 import { haptic, scanTableQR } from "@/services/zalo";
 import { cartCountAtom, tableIdAtom } from "@/state/atoms";
@@ -204,6 +205,9 @@ export default function ButcherPage() {
   const [tab, setTab] = useState<ButcherTab>("all");
   const [openDish, setOpenDish] = useState<Dish | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { searchContainerStyle, inputProps, onScroll } = useScrollSearchBar({
+    activeQuery: searchQuery,
+  });
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
 
@@ -285,7 +289,7 @@ export default function ButcherPage() {
   }, [butcherDishes, tab, searchQuery, tr]);
 
   return (
-    <Screen name="butcher" pad={false}>
+    <Screen name="butcher" pad={false} onScroll={onScroll}>
       {/* ─── 1. THANH ĐẦU TRANG & TÌM KIẾM ĐỒNG BỘ TRANG CHỦ ─── */}
       <header
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-1.5 shadow-sm transition-colors"
@@ -332,8 +336,8 @@ export default function ButcherPage() {
           </div>
         </div>
 
-        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động */}
-        <div className="relative mt-1.5">
+        {/* Hàng 2: Thanh tìm kiếm TMĐT hoạt động trực tiếp với Placeholder chuyển động (ẩn khi kéo xuống, hiện khi dừng lại) */}
+        <div className="relative" style={searchContainerStyle}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -357,6 +361,8 @@ export default function ButcherPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={inputProps.onFocus}
+                  onBlur={inputProps.onBlur}
                   className="relative z-10 w-full bg-transparent text-[13px] text-[var(--washi)] outline-none border-none"
                 />
                 {!searchQuery && (

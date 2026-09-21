@@ -11,6 +11,7 @@ import {
   getSystemInfo,
   getUserInfo,
   openChat,
+  openOutApp,
   openPhone,
   openShareSheet,
   openWebview,
@@ -77,16 +78,32 @@ export async function requestPhoneToken(): Promise<string | null> {
 
 export async function callHotline(phone?: string): Promise<boolean> {
   const number = phone || RESTAURANT.hotline;
-  try {
-    await openPhone({ phoneNumber: number });
-    return true;
-  } catch {
-    if (typeof window !== "undefined") {
+  if (!number) return false;
+
+  if (inZalo()) {
+    try {
+      await openPhone({ phoneNumber: number });
+      return true;
+    } catch {
+      /* Fallback qua tel protocol nếu openPhone lỗi */
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const a = document.createElement("a");
+      a.href = `tel:${number}`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return true;
+    } catch {
       window.location.href = `tel:${number}`;
       return true;
     }
-    return false;
   }
+  return false;
 }
 
 export async function chatWithOA(
@@ -140,10 +157,21 @@ export async function share(input: {
 
 export async function openMap(query: string) {
   const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  try {
-    await openWebview({ url });
-  } catch {
-    window.open(url, "_blank");
+  if (inZalo()) {
+    try {
+      await openOutApp({ url });
+      return;
+    } catch {
+      try {
+        await openWebview({ url });
+        return;
+      } catch {
+        /* Fallback tiếp tục */
+      }
+    }
+  }
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }
 

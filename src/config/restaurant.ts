@@ -48,7 +48,7 @@ export const RESTAURANT = {
    * đặt cá. Giá trị thật lấy từ CMS; đây chỉ là mặc định khi chưa tải được
    * cấu hình. Đặt 0 để bỏ ràng buộc.
    */
-  omakaseLeadHours: 24,
+  omakaseLeadHours: 2,
 
   /** Cho đặt trước tối đa bao nhiêu ngày — CMS chỉnh được. */
   bookingLeadDays: 30,

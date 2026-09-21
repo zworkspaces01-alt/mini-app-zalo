@@ -22,6 +22,7 @@ import { useRestaurant } from "@/hooks/use-restaurant";
 import { useTheme } from "@/hooks/use-theme";
 import { LANGS, useLang, useT, useTr } from "@/i18n";
 import { listOrders } from "@/services/api";
+import { supabase } from "@/services/supabase";
 import { callHotline, chatWithOA, fetchZaloProfile, haptic, openMap } from "@/services/zalo";
 import { favoritesAtom, userAtom, userPointsAtom } from "@/state/atoms";
 import { dishesByIdAtom } from "@/state/content";
@@ -95,6 +96,22 @@ export default function ProfilePage() {
 
   useEffect(() => {
     listOrders().then(setOrders);
+
+    if (!supabase) return;
+    const channel = supabase
+      .channel("customer-orders-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => {
+          listOrders().then(setOrders);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase?.removeChannel(channel);
+    };
   }, []);
 
   return (

@@ -6,7 +6,7 @@ import { uploadImage } from "@/lib/storage";
 interface ImageUploadProps {
   value?: string | null;
   onChange: (url: string) => void;
-  folder?: "dishes" | "omakase" | "banners" | "categories";
+  folder?: "dishes" | "omakase" | "banners" | "categories" | "rewards" | "content";
   label?: string;
   className?: string;
 }

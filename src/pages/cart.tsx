@@ -6,7 +6,7 @@ import { Button, EmptyState, Field, Note, QtyStepper, Sheet, TextArea, TextInput
 import { IconCheck, IconClose, IconQR } from "@/components/ui/icons";
 import { Icon3DPoints, Icon3DVoucher } from "@/components/ui/icons-3d";
 import { BackHeader, Screen } from "@/components/ui/screen";
-import { createOrder, listReservations } from "@/services/api";
+import { createOrder, listReservations, validatePromoVoucher } from "@/services/api";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useLang, useT, useTr } from "@/i18n";
 import { backendError } from "@/services/supabase";
@@ -74,13 +74,57 @@ export default function CartPage() {
   const tier = useAtomValue(userTierAtom);
   const [voucherSheetOpen, setVoucherSheetOpen] = useState(false);
 
+  // Nhập mã voucher khuyến mãi CMS
+  const [promoInput, setPromoInput] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
+
+  const handleApplyPromoCode = async () => {
+    if (!promoInput.trim()) return;
+    setCheckingPromo(true);
+    setPromoError(null);
+    try {
+      const res = await validatePromoVoucher(promoInput, subtotal, user?.id);
+      if (!res.valid) {
+        setPromoError(res.error || "Mã không hợp lệ");
+        haptic("light");
+      } else {
+        haptic("medium");
+        setAppliedVoucher({
+          id: "promo-" + res.code,
+          code: res.code,
+          giftTitle: res.title || `Voucher ${res.code}`,
+          giftCategory: "voucher",
+          worthText: `Giảm ${formatNumber(res.discount)}đ`,
+          status: "active",
+          createdAt: new Date().toISOString(),
+        });
+        setVoucherSheetOpen(false);
+        setPromoInput("");
+        openSnackbar({
+          text: `Đã áp dụng mã ${res.code} (-${vnd(res.discount, lang)})`,
+          type: "success",
+        });
+      }
+    } catch (e: any) {
+      setPromoError(e.message || "Lỗi kiểm tra mã");
+    } finally {
+      setCheckingPromo(false);
+    }
+  };
+
   // Tính số tiền giảm giá từ voucher
   const discountAmount = useMemo(() => {
     if (!appliedVoucher) return 0;
     const text = (appliedVoucher.giftTitle + " " + (appliedVoucher.worthText || "")).toLowerCase();
+    const match = text.match(/(\d+[\d.,]*)\s*(?:đ|k|vnd|000)/);
     if (text.includes("200.000") || text.includes("200k")) return 200000;
     if (text.includes("100.000") || text.includes("100k")) return 100000;
     if (text.includes("50.000") || text.includes("50k")) return 50000;
+    if (match) {
+      const num = parseInt(match[1].replace(/[.,]/g, ""));
+      if (!isNaN(num)) return num < 1000 ? num * 1000 : num;
+    }
     return 50000;
   }, [appliedVoucher]);
 
@@ -156,6 +200,7 @@ export default function CartPage() {
         deliveryAddress: mode === "delivery" ? deliveryAddress.trim() : undefined,
         deliveryTime: mode === "delivery" || mode === "takeout" ? deliveryTime.trim() : undefined,
         paymentMethod: mode === "takeout" || mode === "delivery" ? paymentMethod : "cod",
+        voucherCode: appliedVoucher?.code,
       });
 
       haptic("medium");
@@ -601,12 +646,54 @@ export default function CartPage() {
         title={lang === "ja" ? "適用するクーポンを選択" : lang === "en" ? "Select Voucher" : "Chọn Voucher Áp Dụng"}
       >
         <div className="p-4 space-y-3">
-          <div className="text-[12px] text-[var(--muted)]">
-            {lang === "ja"
-              ? "保有しているクーポンから選択して割引を適用します："
-              : lang === "en"
-              ? "Select an active voucher from your wallet to apply discount:"
-              : "Chọn mã ưu đãi từ ví voucher của bạn để giảm trừ trực tiếp trên đơn hàng:"}
+          {/* Ô nhập mã ưu đãi tạo từ CMS */}
+          <div className="space-y-1.5">
+            <div className="flex gap-2">
+              <TextInput
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value);
+                  setPromoError(null);
+                }}
+                placeholder={
+                  lang === "ja"
+                    ? "優待コードを入力 (例: MIYAKO50)"
+                    : lang === "en"
+                    ? "Enter promo code (e.g. MIYAKO50)"
+                    : "Nhập mã ưu đãi (VD: MIYAKO50, WAGYU10...)"
+                }
+                className="uppercase font-mono text-[13px] flex-1"
+              />
+              <button
+                type="button"
+                onClick={handleApplyPromoCode}
+                disabled={checkingPromo || !promoInput.trim()}
+                className="shrink-0 h-11 px-4 rounded-xl bg-[var(--gold)] text-black font-bold text-[13px] hover:brightness-110 active:scale-95 transition-all disabled:opacity-40"
+              >
+                {checkingPromo
+                  ? lang === "ja"
+                    ? "Kiểm tra..."
+                    : lang === "en"
+                    ? "Checking..."
+                    : "Kiểm tra..."
+                  : lang === "ja"
+                  ? "適用"
+                  : lang === "en"
+                  ? "Apply"
+                  : "Áp dụng"}
+              </button>
+            </div>
+            {promoError && (
+              <p className="text-[12px] text-rose-400 font-medium px-1">{promoError}</p>
+            )}
+          </div>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-[var(--line)]"></div>
+            <span className="flex-shrink mx-3 text-[11px] text-[var(--muted)] uppercase font-semibold">
+              {lang === "ja" ? "または保有クーポン" : lang === "en" ? "or from wallet" : "hoặc chọn từ ví"}
+            </span>
+            <div className="flex-grow border-t border-[var(--line)]"></div>
           </div>
 
           {vouchers.filter((v) => v.status === "active").length === 0 ? (

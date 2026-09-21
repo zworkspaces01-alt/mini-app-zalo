@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/icons-3d";
 import { LangButton } from "@/components/ui/lang-switch";
 import { Screen } from "@/components/ui/screen";
+import { useBanners, useContentItems } from "@/hooks/use-page-content";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useLang, useT, useTr } from "@/i18n";
 import { dishFromPrice } from "@/data/menu";
@@ -271,7 +272,24 @@ export default function HomePage() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
 
+  const dynamicBanners = useBanners("home_hero");
+  const homePromos = useContentItems("home_promo");
+  const homeOffers = useContentItems("home_offer");
+  const homeHighlights = useContentItems("home_highlight");
+
   const localizedBanners = useMemo(() => {
+    if (dynamicBanners && dynamicBanners.length > 0) {
+      return dynamicBanners.map((b) => ({
+        id: b.id,
+        tag: b.tag || "MIYAKO",
+        title: b.title,
+        sub: b.subtitle || "",
+        cta: b.ctaText || (lang === "ja" ? "今すぐ見る" : lang === "en" ? "Explore now" : "Khám phá ngay"),
+        route: b.ctaLink || "/menu",
+        img: b.image,
+        color: b.accent || "from-amber-600/30 to-amber-950/80",
+      }));
+    }
     return RAW_BANNERS.map((b) => ({
       id: b.id,
       tag: b.tag[lang] ?? b.tag.vi,
@@ -282,7 +300,7 @@ export default function HomePage() {
       img: b.img,
       color: b.color,
     }));
-  }, [lang]);
+  }, [dynamicBanners, lang]);
 
   const currentPlaceholders = useMemo(() => {
     return HOME_SEARCH_PLACEHOLDERS[lang] ?? HOME_SEARCH_PLACEHOLDERS.vi;
@@ -922,56 +940,59 @@ export default function HomePage() {
 
       {/* ─── 5. BANNER SPOTLIGHT: MIYAKO BUTCHER SHOP ─── */}
       <section className="mt-5 px-3">
-        <div
-          onClick={() => {
-            haptic("light");
-            navigate("/butcher");
-          }}
-          className="butcher-card group relative cursor-pointer overflow-hidden rounded-xl p-2.5 shadow-sm border border-[var(--line-strong)] transition-all active:scale-[0.99]"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 pr-2">
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-md bg-[var(--gold)]/15 px-1.5 py-0.5 text-[9.5px] font-bold tracking-wider text-[var(--gold)] flex items-center gap-1">
-                  <Icon3DMeat size={13} /> MIYAKO BUTCHER
+        {(() => {
+          const promo = homePromos[0];
+          const tag = promo?.tag || "MIYAKO BUTCHER";
+          const sub = promo?.subtitle || (lang === "ja" ? "45分スピード配達" : lang === "en" ? "45-min delivery" : "Giao nhanh 45p");
+          const title = promo?.title || (lang === "ja" ? "ご希望に合わせてカットする日本産A5和牛" : lang === "en" ? "Custom-Cut Japanese A5 Wagyu Beef" : "Thịt Bò Wagyu Nhật A5 Cắt Theo Yêu Cầu");
+          const desc = promo?.body || (lang === "ja" ? "保冷剤入り真空パック包装。しゃぶしゃぶ(1.5mm)、焼肉(3.5mm)、ステーキ(2cm)など無料カット。" : lang === "en" ? "Vacuum packed with thermal ice gel. Custom slicing for Shabu (1.5mm), Yakiniku (3.5mm), Steak (2cm)." : "Thịt tươi hút chân không kèm đá gel giữ nhiệt. Tùy chọn cắt lát Lẩu (1.5mm), Nướng (3.5mm), Steak (2cm).");
+          const link = promo?.link || "/butcher";
+
+          return (
+            <div
+              onClick={() => {
+                haptic("light");
+                navigate(link);
+              }}
+              className="butcher-card group relative cursor-pointer overflow-hidden rounded-xl p-2.5 shadow-sm border border-[var(--line-strong)] transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded-md bg-[var(--gold)]/15 px-1.5 py-0.5 text-[9.5px] font-bold tracking-wider text-[var(--gold)] flex items-center gap-1">
+                      <Icon3DMeat size={13} /> {tag}
+                    </span>
+                    <span className="text-[9.5px] font-medium text-[var(--muted)]">
+                      {sub}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 font-display text-[15px] font-bold text-[var(--washi)]">
+                    {title}
+                  </h3>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--muted)]">
+                    {desc}
+                  </p>
+                </div>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--gold)]/30 bg-[var(--gold-dim)] p-1 shadow-sm">
+                  <Icon3DButcher size={34} />
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-[var(--line)] pt-2">
+                <span className="text-[11.5px] font-semibold text-[var(--gold)] flex items-center gap-1">
+                  {lang === "ja"
+                    ? "精肉店を見る"
+                    : lang === "en"
+                    ? "Explore Butcher Shop"
+                    : "Khám phá cửa hàng thịt"}{" "}
+                  <IconChevronRight size={13} />
                 </span>
-                <span className="text-[9.5px] font-medium text-[var(--muted)]">
-                  {lang === "ja" ? "45分スピード配達" : lang === "en" ? "45-min delivery" : "Giao nhanh 45p"}
+                <span className="rounded-full bg-[var(--gold)]/20 px-2 py-0.5 text-[10.5px] font-bold text-[var(--gold)]">
+                  {lang === "ja" ? "280,000₫〜" : lang === "en" ? "From 280,000₫" : "Từ 280.000đ"}
                 </span>
               </div>
-              <h3 className="mt-1 font-display text-[15px] font-bold text-[var(--washi)]">
-                {lang === "ja"
-                  ? "ご希望に合わせてカットする日本産A5和牛"
-                  : lang === "en"
-                  ? "Custom-Cut Japanese A5 Wagyu Beef"
-                  : "Thịt Bò Wagyu Nhật A5 Cắt Theo Yêu Cầu"}
-              </h3>
-              <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--muted)]">
-                {lang === "ja"
-                  ? "保冷剤入り真空パック包装。しゃぶしゃぶ(1.5mm)、焼肉(3.5mm)、ステーキ(2cm)など無料カット。"
-                  : lang === "en"
-                  ? "Vacuum packed with thermal ice gel. Custom slicing for Shabu (1.5mm), Yakiniku (3.5mm), Steak (2cm)."
-                  : "Thịt tươi hút chân không kèm đá gel giữ nhiệt. Tùy chọn cắt lát Lẩu (1.5mm), Nướng (3.5mm), Steak (2cm)."}
-              </p>
             </div>
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--gold)]/30 bg-[var(--gold-dim)] p-1 shadow-sm">
-              <Icon3DButcher size={34} />
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between border-t border-[var(--line)] pt-2">
-            <span className="text-[11.5px] font-semibold text-[var(--gold)] flex items-center gap-1">
-              {lang === "ja"
-                ? "精肉店を見る"
-                : lang === "en"
-                ? "Explore Butcher Shop"
-                : "Khám phá cửa hàng thịt"}{" "}
-              <IconChevronRight size={13} />
-            </span>
-            <span className="rounded-full bg-[var(--gold)]/20 px-2 py-0.5 text-[10.5px] font-bold text-[var(--gold)]">
-              {lang === "ja" ? "280,000₫〜" : lang === "en" ? "From 280,000₫" : "Từ 280.000đ"}
-            </span>
-          </div>
-        </div>
+          );
+        })()}
       </section>
 
       {/* ─── 6. FEED SẢN PHẨM LƯỚI 2 CỘT CHUẨN APP TMĐT (TỶ LỆ ẢNH 1:1 VÀ 3:4) ─── */}

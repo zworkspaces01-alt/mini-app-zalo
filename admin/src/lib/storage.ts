@@ -33,7 +33,7 @@ async function signCloudinaryUpload(folder: string): Promise<CloudinarySignature
  */
 export async function uploadImage(
   file: File,
-  folder: "dishes" | "omakase" | "banners" | "categories" | "rewards" = "dishes"
+  folder: "dishes" | "omakase" | "banners" | "categories" | "rewards" | "content" = "dishes"
 ): Promise<{ url: string | null; error: string | null }> {
   // 1. Ưu tiên Cloudinary nếu máy chủ ký được
   try {

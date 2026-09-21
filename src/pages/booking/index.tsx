@@ -48,9 +48,12 @@ export default function BookingPage() {
   const [touched, setTouched] = useState(false);
 
   const selectedSet = omakaseSets.find((s) => s.id === booking.omakaseSetId);
-  /* Suất "both" cần khung giờ của cả hai ca. Chưa chọn suất thì giữ ca tối
-     như trước — khách gọi món lẻ chủ yếu đặt buổi tối. */
-  const services: ServiceSlot[] = selectedSet ? servicesOf(selectedSet) : ["dinner"];
+  /* Nếu đã chọn suất omakase: lấy theo ca của suất đó (lunch / dinner / both).
+     Nếu gọi món (alacarte) hoặc chưa chọn suất: hiển thị cả 2 ca (trưa & tối)
+     để khách chọn được bất kỳ khung giờ nào trong ngày. */
+  const services: ServiceSlot[] = selectedSet
+    ? servicesOf(selectedSet)
+    : ["lunch", "dinner"];
   const serviceKey = services.join("+");
 
   const isAlacarte = booking.purpose === "alacarte";

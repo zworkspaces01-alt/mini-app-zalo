@@ -357,6 +357,7 @@ export async function createOrder(input: {
   deliveryTime?: string;
   deliveryFee?: number;
   paymentMethod?: "vietqr" | "cod" | "transfer";
+  voucherCode?: string;
 }): Promise<Order> {
   if (!supabase) throw offline();
 
@@ -378,6 +379,7 @@ export async function createOrder(input: {
     p_delivery_time: input.deliveryTime || undefined,
     p_payment_method: input.paymentMethod || "cod",
     p_delivery_fee: input.deliveryFee || 0,
+    p_voucher_code: input.voucherCode ? input.voucherCode.trim().toUpperCase() : undefined,
   });
   if (error) throw error;
 
@@ -649,6 +651,137 @@ export async function fetchCustomerVouchers(
     }));
   } catch {
     return [];
+  }
+}
+
+/** Xác thực mã voucher khuyến mãi (tạo từ CMS) hoặc mã đổi quà */
+export async function validatePromoVoucher(
+  code: string,
+  subtotal: number,
+  zaloId?: string
+): Promise<{
+  valid: boolean;
+  code: string;
+  title: string;
+  discount: number;
+  minOrder?: number;
+  error?: string;
+}> {
+  if (!supabase) {
+    return { valid: false, code, title: "", discount: 0, error: "Chưa kết nối máy chủ" };
+  }
+  const cleanCode = code.trim().toUpperCase();
+  if (!cleanCode) {
+    return { valid: false, code, title: "", discount: 0, error: "Vui lòng nhập mã" };
+  }
+
+  try {
+    // 1. Kiểm tra bảng vouchers (mã khuyến mãi do Admin CMS tạo)
+    const { data: promo } = await (supabase as any)
+      .from("vouchers")
+      .select("*")
+      .ilike("code", cleanCode)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (promo) {
+      if (promo.valid_until && new Date(promo.valid_until) < new Date()) {
+        return {
+          valid: false,
+          code: cleanCode,
+          title: promo.title,
+          discount: 0,
+          error: "Mã ưu đãi đã hết hạn sử dụng",
+        };
+      }
+      if (promo.usage_limit && promo.times_used >= promo.usage_limit) {
+        return {
+          valid: false,
+          code: cleanCode,
+          title: promo.title,
+          discount: 0,
+          error: "Mã ưu đãi đã hết lượt sử dụng",
+        };
+      }
+      if (promo.min_order_amount && subtotal < promo.min_order_amount) {
+        return {
+          valid: false,
+          code: cleanCode,
+          title: promo.title,
+          discount: 0,
+          minOrder: promo.min_order_amount,
+          error: `Đơn tối thiểu ${promo.min_order_amount.toLocaleString("vi-VN")}đ để dùng mã này`,
+        };
+      }
+
+      let discount = 0;
+      if (promo.discount_type === "percent") {
+        discount = Math.round((subtotal * promo.discount_value) / 100);
+        if (promo.max_discount_amount && discount > promo.max_discount_amount) {
+          discount = promo.max_discount_amount;
+        }
+      } else {
+        discount = promo.discount_value;
+      }
+      discount = Math.min(discount, subtotal);
+
+      return {
+        valid: true,
+        code: cleanCode,
+        title: promo.title,
+        discount,
+        minOrder: promo.min_order_amount,
+      };
+    }
+
+    // 2. Kiểm tra bảng voucher_redemptions (mã đổi thưởng của khách)
+    const { data: redemption } = await (supabase as any)
+      .from("voucher_redemptions")
+      .select("*, reward_gifts(*)")
+      .ilike("code", cleanCode)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (redemption) {
+      const gift = redemption.reward_gifts;
+      const val = gift?.discount_value ?? 50000;
+      const minVal = gift?.min_order_value ?? 0;
+
+      if (minVal && subtotal < minVal) {
+        return {
+          valid: false,
+          code: cleanCode,
+          title: gift?.title || "Voucher đổi điểm",
+          discount: 0,
+          minOrder: minVal,
+          error: `Đơn tối thiểu ${minVal.toLocaleString("vi-VN")}đ để dùng mã này`,
+        };
+      }
+
+      return {
+        valid: true,
+        code: cleanCode,
+        title: gift?.title || "Voucher đổi điểm",
+        discount: Math.min(val, subtotal),
+        minOrder: minVal,
+      };
+    }
+
+    return {
+      valid: false,
+      code: cleanCode,
+      title: "",
+      discount: 0,
+      error: "Mã giảm giá không hợp lệ hoặc đã được sử dụng",
+    };
+  } catch (e: any) {
+    return {
+      valid: false,
+      code: cleanCode,
+      title: "",
+      discount: 0,
+      error: e?.message || "Lỗi kiểm tra mã",
+    };
   }
 }
 

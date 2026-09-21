@@ -1,4 +1,4 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useMemo, useState } from "react";
 import { useNavigate } from "zmp-ui";
 
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/icons-3d";
 import { Screen } from "@/components/ui/screen";
 import { useLang, useT } from "@/i18n";
+import { redeemRewardGift } from "@/services/api";
 import { haptic, scanTableQR } from "@/services/zalo";
 import { notifyTelegram } from "@/services/telegram";
 import {
@@ -32,7 +33,9 @@ import {
   userAtom,
   userPointsAtom,
   userTierAtom,
+  userVouchersAtom,
 } from "@/state/atoms";
+import { rewardGiftsAtom } from "@/state/content";
 import { formatNumber, vnd } from "@/utils/format";
 
 /* ─── Danh mục quà tặng đổi điểm hỗ trợ 3 ngôn ngữ ─── */
@@ -376,9 +379,49 @@ export default function RewardsPage() {
   const [selectedGift, setSelectedGift] = useState<RewardGift | null>(null);
   const [redeemedCode, setRedeemedCode] = useState<string | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState(false);
+  const [submittingRedeem, setSubmittingRedeem] = useState(false);
+  const liveGifts = useAtomValue(rewardGiftsAtom);
+  const setVouchers = useSetAtom(userVouchersAtom);
 
-  // Danh sách quà tặng theo ngôn ngữ hiện tại
+  // Danh sách quà tặng từ CMS với fallback an toàn
   const localizedGifts = useMemo<RewardGift[]>(() => {
+    if (liveGifts && liveGifts.length > 0) {
+      return liveGifts.map((g) => {
+        let icon: React.ReactNode = <Icon3DPoints size={36} />;
+        if (g.imageUrl) {
+          icon = (
+            <img
+              src={g.imageUrl}
+              alt={typeof g.title === "string" ? g.title : ""}
+              className="w-9 h-9 object-cover rounded-lg border border-gold/30"
+            />
+          );
+        } else if (g.category === "voucher") {
+          icon = <Icon3DVoucher size={36} />;
+        } else if (g.category === "dish") {
+          icon = <Icon3DSushi size={36} />;
+        } else if (g.category === "drink") {
+          icon = <Icon3DHotpot size={36} />;
+        }
+
+        const title = typeof g.title === "string" ? g.title : (g.title as any)?.[lang] ?? (g.title as any)?.vi ?? "";
+        const desc = typeof g.desc === "string" ? g.desc : (g.desc as any)?.[lang] ?? (g.desc as any)?.vi ?? "";
+        const worthText = typeof g.worthText === "string" ? g.worthText : (g.worthText as any)?.[lang] ?? (g.worthText as any)?.vi ?? "";
+        const badge = g.badge ? (typeof g.badge === "string" ? g.badge : (g.badge as any)?.[lang] ?? (g.badge as any)?.vi) : undefined;
+
+        return {
+          id: g.id,
+          category: g.category as GiftCategory,
+          title: title || "Quà tặng",
+          desc: desc || "",
+          worthText: worthText || "",
+          pointsCost: g.pointsCost,
+          badge,
+          icon,
+        };
+      });
+    }
+
     return RAW_REWARD_GIFTS.map((g) => ({
       id: g.id,
       category: g.category,
@@ -389,7 +432,7 @@ export default function RewardsPage() {
       badge: g.badge ? (g.badge[lang] ?? g.badge.vi) : undefined,
       icon: g.icon,
     }));
-  }, [lang]);
+  }, [liveGifts, lang]);
 
   // Quests state đã hoàn thành
   const [completedQuestIds, setCompletedQuestIds] = useState<string[]>([]);
@@ -492,28 +535,63 @@ export default function RewardsPage() {
     return localizedGifts.filter((g) => g.category === giftCategory);
   }, [localizedGifts, giftCategory]);
 
-  // Xử lý đổi quà
-  const handleConfirmRedeem = () => {
-    if (!selectedGift) return;
+  // Xử lý đổi quà thực tế qua Supabase RPC và đồng bộ với CMS
+  const handleConfirmRedeem = async () => {
+    if (!selectedGift || submittingRedeem) return;
     if (points < selectedGift.pointsCost) {
       haptic("light");
       return;
     }
 
+    setSubmittingRedeem(true);
     haptic("medium");
-    const success = redeemGift({
-      id: selectedGift.id,
-      title: selectedGift.title,
-      pointsCost: selectedGift.pointsCost,
-    });
 
-    if (success) {
-      const randomCode =
-        "MYK-" + Math.random().toString(36).substring(2, 7).toUpperCase();
-      setRedeemedCode(randomCode);
+    try {
+      // 1. Gọi backend Supabase tạo voucher redemption thật
+      const res = await redeemRewardGift({
+        zaloId: user?.id || "zalo-guest",
+        giftId: selectedGift.id,
+      });
+
+      const actualCode =
+        res.success && res.code
+          ? res.code
+          : "MYK-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+
+      if (res.newBalance !== undefined) {
+        setPoints(res.newBalance);
+      } else {
+        setPoints((p) => Math.max(0, p - selectedGift.pointsCost));
+      }
+
+      // 2. Cập nhật state atom
+      redeemGift({
+        id: selectedGift.id,
+        title: selectedGift.title,
+        pointsCost: selectedGift.pointsCost,
+      });
+
+      setRedeemedCode(actualCode);
       setRedeemSuccess(true);
 
-      // Gửi thông báo Telegram tức thì vào Topic Khách tích điểm / Đổi thưởng
+      // 3. Thêm vào ví voucher hiển thị
+      const nowIso = new Date().toISOString();
+      setVouchers((prev) => [
+        {
+          id: "v-" + Date.now(),
+          giftId: selectedGift.id,
+          giftTitle: selectedGift.title,
+          giftCategory: selectedGift.category,
+          worthText: selectedGift.worthText,
+          code: actualCode,
+          pointsCost: selectedGift.pointsCost,
+          createdAt: nowIso,
+          status: "active",
+        },
+        ...prev,
+      ]);
+
+      // 4. Gửi thông báo Telegram tức thì vào Topic Khách tích điểm / Đổi thưởng
       notifyTelegram({
         type: "loyalty",
         data: {
@@ -522,12 +600,16 @@ export default function RewardsPage() {
           customer_phone: user?.phone || "",
           tier_name: tierInfo.name,
           gift_title: selectedGift.title,
-          voucher_code: randomCode,
+          voucher_code: actualCode,
           points_change: selectedGift.pointsCost,
-          current_points: Math.max(0, points - selectedGift.pointsCost),
+          current_points: res.newBalance ?? Math.max(0, points - selectedGift.pointsCost),
           note: `Khách đổi quà ${selectedGift.title} trên Zalo Mini App`,
         },
       }).catch((err) => console.warn("Telegram loyalty error:", err));
+    } catch (e) {
+      console.warn("Lỗi đổi quà:", e);
+    } finally {
+      setSubmittingRedeem(false);
     }
   };
 

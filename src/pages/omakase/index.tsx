@@ -180,7 +180,7 @@ const OMAKASE_STEPS = [
   { step: 7, name: "Mizumono", vi: "Wagashi & Matcha", desc: "Tráng miệng thanh tao khép lại hành trình" },
 ];
 
-/* ─── Thẻ ảnh phong cách Pinterest Masonry ─── */
+/* ─── Thẻ ảnh phong cách Pinterest Masonry: Chỉ hiển thị ảnh thuần tuý ─── */
 function PinterestCard({
   pin,
   onOpen,
@@ -200,45 +200,6 @@ function PinterestCard({
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
-
-        {/* Tag phân loại trên cùng */}
-        <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/65 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold text-white border border-white/15 shadow-sm">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              pin.type === "space" ? "bg-[var(--gold)]" : "bg-[var(--shu)]"
-            }`}
-          />
-          <span>{pin.type === "space" ? "Không gian" : "Món ăn"}</span>
-        </div>
-
-        {/* Badge chỗ ngồi nếu là không gian */}
-        {pin.seating && (
-          <div className="absolute top-2 right-2 rounded-full bg-[var(--gold)]/20 backdrop-blur-md border border-[var(--gold)]/40 px-2 py-0.5 text-[8.5px] font-bold text-[var(--gold)]">
-            {pin.seating === "counter" ? "Quầy Bar" : "Phòng VIP"}
-          </div>
-        )}
-
-        {/* Tiêu đề dưới chân ảnh */}
-        <div className="absolute inset-x-2.5 bottom-2 text-white">
-          <div className="jp text-[8.5px] text-[var(--gold)] tracking-wider font-medium drop-shadow-sm">
-            {pin.jp}
-          </div>
-          <h4 className="font-display text-[12px] font-bold leading-tight drop-shadow mt-0.5 line-clamp-2">
-            {pin.title}
-          </h4>
-        </div>
-      </div>
-
-      {/* Mô tả ngắn chân card */}
-      <div className="p-2.5">
-        <p className="text-[11px] leading-relaxed text-[var(--muted)] line-clamp-2">
-          {pin.desc}
-        </p>
-        <div className="mt-2 flex items-center justify-between pt-1.5 border-t border-[var(--line)] text-[10px]">
-          <span className="text-[var(--gold)] font-medium">Chạm phóng to</span>
-          <IconChevronRight size={10} className="text-[var(--gold)]" />
-        </div>
       </div>
     </div>
   );

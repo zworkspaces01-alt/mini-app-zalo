@@ -9,6 +9,7 @@ import { BrandLogo, Chip, EmptyState } from "@/components/ui";
 import {
   IconClose,
   IconCart,
+  IconChevronRight,
   IconQR,
   IconSearch,
 } from "@/components/ui/icons";
@@ -26,6 +27,7 @@ import { cartCountAtom, tableIdAtom } from "@/state/atoms";
 import { dishesAtom } from "@/state/content";
 import { Dish } from "@/types";
 import { deaccent } from "@/utils/format";
+import { heroDon, heroHotpot, heroWagyu, space } from "@/utils/images";
 
 type ButcherTab = "all" | "wagyu" | "us" | "box" | "sauce";
 
@@ -53,6 +55,50 @@ const BUTCHER_SEARCH_PLACEHOLDERS = [
   "Tìm Lõi nạc vai Wagyu A5...",
 ];
 
+/* ─── Danh sách banner quảng cáo chuyên biệt cho Wagyu Butcher ─── */
+const BUTCHER_BANNERS = [
+  {
+    id: "wagyu-a5",
+    tag: "WAGYU A5 NHẬT BẢN",
+    title: "Vân Mỡ Cẩm Thạch BMS 10-12",
+    sub: "Nhập khẩu nguyên con từ Miyazaki, cắt lát theo yêu cầu Steak / Nướng / Lẩu",
+    cta: "Khám phá Wagyu A5",
+    filterTab: "wagyu" as ButcherTab,
+    img: heroWagyu,
+    color: "from-[#7b0808]/90 via-black/50 to-transparent",
+  },
+  {
+    id: "hotpot-box",
+    tag: "SET TIỆC TẠI GIA",
+    title: "Thịt Nướng BBQ & Lẩu Shabu",
+    sub: "Tặng kèm nước dùng hầm 12h, rau củ và sốt chấm mè rang chuẩn vị",
+    cta: "Xem Set Nướng / Lẩu",
+    filterTab: "box" as ButcherTab,
+    img: heroHotpot,
+    color: "from-[#2e1704]/90 via-black/50 to-transparent",
+  },
+  {
+    id: "us-prime",
+    tag: "US PRIME BEEF",
+    title: "Bò Mỹ Prime Cao Cấp",
+    sub: "Thăn lưng & dẻ sườn mềm mọng, ngọt đậm cho bữa tiệc gia đình",
+    cta: "Xem Bò Mỹ Prime",
+    filterTab: "us" as ButcherTab,
+    img: heroDon,
+    color: "from-black/85 via-black/45 to-transparent",
+  },
+  {
+    id: "fresh-delivery",
+    tag: "GIAO HỎA TỐC 2H",
+    title: "Đóng Khay Khí Trơ & Đá Gel",
+    sub: "Giữ trọn vẹn độ tươi ngon và nhiệt độ lạnh sâu tới tận tay khách hàng",
+    cta: "Đặt mua giao ngay",
+    filterTab: "all" as ButcherTab,
+    img: space,
+    color: "from-[#0d1f38]/90 via-black/50 to-transparent",
+  },
+];
+
 export default function ButcherPage() {
   const navigate = useNavigate();
   const dishes = useAtomValue(dishesAtom);
@@ -67,6 +113,19 @@ export default function ButcherPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderFade, setPlaceholderFade] = useState(true);
+
+  // Slider Banner Wagyu Butcher
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  /* Tự động chuyển banner sau mỗi 3.8s */
+  useEffect(() => {
+    if (searchQuery.trim()) return;
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % BUTCHER_BANNERS.length);
+    }, 3800);
+    return () => clearInterval(interval);
+  }, [searchQuery]);
 
   /* Chuyển động thay đổi placeholder liên tục mỗi 3.2 giây */
   useEffect(() => {
@@ -264,6 +323,87 @@ export default function ButcherPage() {
           <div className="mb-2 text-[13px] text-[var(--muted)]">
             {t.menu.results(visible.length, searchQuery.trim())}
           </div>
+        )}
+
+        {/* ─── BANNER SLIDER QUẢNG CÁO WAGYU BUTCHER (ĐỒNG BỘ TRANG CHỦ) ─── */}
+        {!searchQuery.trim() && (
+          <section className="mb-4">
+            <div
+              className="relative overflow-hidden rounded-xl border border-[var(--line)] shadow-sm bg-[var(--surface-2)]"
+              onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+              onTouchEnd={(e) => {
+                if (touchStartX === null) return;
+                const diff = e.changedTouches[0].clientX - touchStartX;
+                if (diff > 40) {
+                  haptic("light");
+                  setActiveSlide((prev) => (prev - 1 + BUTCHER_BANNERS.length) % BUTCHER_BANNERS.length);
+                } else if (diff < -40) {
+                  haptic("light");
+                  setActiveSlide((prev) => (prev + 1) % BUTCHER_BANNERS.length);
+                }
+                setTouchStartX(null);
+              }}
+            >
+              <div
+                className="flex transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+              >
+                {BUTCHER_BANNERS.map((b) => (
+                  <div
+                    key={b.id}
+                    onClick={() => {
+                      haptic("light");
+                      setTab(b.filterTab);
+                    }}
+                    className="relative h-[140px] w-full shrink-0 cursor-pointer overflow-hidden select-none"
+                  >
+                    <img
+                      src={b.img}
+                      alt={b.title}
+                      className="h-full w-full object-cover"
+                    />
+                    {/* Lớp phủ chuyển sắc */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-t ${b.color} p-3.5 flex flex-col justify-end text-white`}
+                    >
+                      <span className="w-fit rounded-full bg-[var(--shu)]/90 px-2.5 py-0.5 text-[9.5px] font-bold tracking-wider uppercase text-white shadow-sm border border-white/10">
+                        {b.tag}
+                      </span>
+                      <h3 className="mt-1 font-display text-[16px] font-bold leading-snug drop-shadow-md">
+                        {b.title}
+                      </h3>
+                      <p className="mt-0.5 line-clamp-1 text-[11.5px] opacity-90 drop-shadow-sm text-zinc-200">
+                        {b.sub}
+                      </p>
+                      <div className="mt-1 flex items-center gap-1 text-[11.5px] font-semibold text-[#ffd285]">
+                        <span>{b.cta}</span>
+                        <IconChevronRight size={13} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dots chỉ số slide */}
+              <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5 z-10">
+                {BUTCHER_BANNERS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    aria-label={`Slide ${idx + 1}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      haptic("light");
+                      setActiveSlide(idx);
+                    }}
+                    className={`h-1.5 rounded-full transition-all ${
+                      activeSlide === idx ? "w-3.5 bg-white shadow-sm" : "w-1.5 bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {/* ── Giới thiệu dịch vụ Butcher cao cấp (ẩn khi đang tìm kiếm) ── */}

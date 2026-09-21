@@ -16,12 +16,12 @@ interface UseScrollSearchBarOptions {
 /**
  * Hook điều khiển ẩn thanh tìm kiếm khi người dùng cuộn/kéo xuống,
  * và tự động hiện lại khi người dùng dừng lại hoặc cuộn ngược lên trên.
- * Áp dụng thống nhất cho mọi nơi có thanh search trong Mini App.
+ * Áp dụng cơ chế khoá chống giật/nháy (layout-shift protection) triệt để.
  */
 export function useScrollSearchBar({
   topThreshold = 25,
-  deltaThreshold = 8,
-  idleDelay = 280,
+  deltaThreshold = 12,
+  idleDelay = 300,
   activeQuery = "",
   keepVisibleWhenQuery = false,
 }: UseScrollSearchBarOptions = {}) {
@@ -30,6 +30,11 @@ export function useScrollSearchBar({
   const lastScrollY = useRef(0);
   const accumulatedDelta = useRef(0);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cờ khoá chống nháy: khi thanh search đang trượt mở lại, bỏ qua các scroll event do đổi chiều cao header
+  const isRevealingRef = useRef(false);
+  const revealingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTouchingRef = useRef(false);
 
   // Tìm vị trí scrollTop thực tế của container đang cuộn (ZMP Page / zaui-page / window)
   const getScrollPosition = useCallback((target: EventTarget | null): number | null => {
@@ -60,6 +65,28 @@ export function useScrollSearchBar({
     );
   }, []);
 
+  // Hàm mở lại thanh search có kèm cờ khoá chống layout-shift nháy nháy
+  const startReveal = useCallback(() => {
+    setIsScrollVisible((prev) => {
+      if (!prev) {
+        isRevealingRef.current = true;
+        if (revealingTimerRef.current) {
+          clearTimeout(revealingTimerRef.current);
+        }
+        revealingTimerRef.current = setTimeout(() => {
+          const current = getScrollPosition(null);
+          if (current !== null) {
+            lastScrollY.current = Math.max(0, current);
+          }
+          isRevealingRef.current = false;
+        }, 360);
+        return true;
+      }
+      return prev;
+    });
+    accumulatedDelta.current = 0;
+  }, [getScrollPosition]);
+
   const handleScroll = useCallback(
     (e?: Event | React.UIEvent<HTMLElement>) => {
       // Khi đang focus gõ phím vào input, không ẩn thanh search
@@ -72,13 +99,20 @@ export function useScrollSearchBar({
       const currentScrollY = getScrollPosition(target);
       if (currentScrollY === null) return;
 
+      // Nếu đang trong tiến trình mở rộng thanh search, bỏ qua để tránh vòng lặp layout-shift
+      if (isRevealingRef.current) {
+        lastScrollY.current = Math.max(0, currentScrollY);
+        accumulatedDelta.current = 0;
+        return;
+      }
+
       // Xoá timer phát hiện dừng cuộn trước đó
       if (idleTimer.current) {
         clearTimeout(idleTimer.current);
         idleTimer.current = null;
       }
 
-      // Ở gần đỉnh trang: luôn luôn hiển thị
+      // Ở gần đỉnh trang: luôn luôn hiển thị cố định
       if (currentScrollY <= topThreshold) {
         setIsScrollVisible(true);
         lastScrollY.current = Math.max(0, currentScrollY);
@@ -115,11 +149,10 @@ export function useScrollSearchBar({
 
       // Khi người dùng dừng lại (không phát sinh scroll sau idleDelay ms) -> tự động hiện lại
       idleTimer.current = setTimeout(() => {
-        setIsScrollVisible(true);
-        accumulatedDelta.current = 0;
+        startReveal();
       }, idleDelay);
     },
-    [getScrollPosition, isFocused, topThreshold, deltaThreshold, idleDelay]
+    [getScrollPosition, isFocused, topThreshold, deltaThreshold, idleDelay, startReveal]
   );
 
   const handleScrollEnd = useCallback(() => {
@@ -127,13 +160,26 @@ export function useScrollSearchBar({
       clearTimeout(idleTimer.current);
       idleTimer.current = null;
     }
-    setIsScrollVisible(true);
-    accumulatedDelta.current = 0;
-  }, []);
+    startReveal();
+  }, [startReveal]);
 
   useEffect(() => {
     const onScrollCapture = (e: Event) => {
       handleScroll(e);
+    };
+
+    const onTouchStart = () => {
+      isTouchingRef.current = true;
+      // Người dùng chủ động chạm ngón tay vào màn hình -> giải phóng khoá để có thể ẩn ngay khi kéo
+      isRevealingRef.current = false;
+      if (revealingTimerRef.current) {
+        clearTimeout(revealingTimerRef.current);
+        revealingTimerRef.current = null;
+      }
+    };
+
+    const onTouchEnd = () => {
+      isTouchingRef.current = false;
     };
 
     window.addEventListener("scroll", onScrollCapture, {
@@ -144,13 +190,29 @@ export function useScrollSearchBar({
       capture: true,
       passive: true,
     });
+    window.addEventListener("touchstart", onTouchStart, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("touchend", onTouchEnd, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("touchcancel", onTouchEnd, {
+      capture: true,
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener("scroll", onScrollCapture, { capture: true });
       window.removeEventListener("scrollend", handleScrollEnd, {
         capture: true,
       });
+      window.removeEventListener("touchstart", onTouchStart, { capture: true });
+      window.removeEventListener("touchend", onTouchEnd, { capture: true });
+      window.removeEventListener("touchcancel", onTouchEnd, { capture: true });
       if (idleTimer.current) clearTimeout(idleTimer.current);
+      if (revealingTimerRef.current) clearTimeout(revealingTimerRef.current);
     };
   }, [handleScroll, handleScrollEnd]);
 
@@ -187,6 +249,7 @@ export function useScrollSearchBar({
       transform: isSearchVisible ? "translateY(0)" : "translateY(-6px)",
       overflow: isSearchVisible ? ("visible" as const) : ("hidden" as const),
       pointerEvents: isSearchVisible ? ("auto" as const) : ("none" as const),
+      overflowAnchor: "none" as const,
       transition:
         "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, transform 0.26s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
       willChange: "max-height, opacity, transform",

@@ -295,6 +295,7 @@ export default function ButcherPage() {
         className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--line)] px-3 pb-1.5 shadow-sm transition-colors"
         style={{
           paddingTop: "calc(max(var(--sat), env(safe-area-inset-top, 0px)) + 26px)",
+          overflowAnchor: "none",
         }}
       >
         {/* Hàng 1: Logo ngang, Quét QR, Giỏ hàng, Đổi ngôn ngữ */}

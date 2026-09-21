@@ -617,162 +617,190 @@ export default function OmakasePage() {
 
         <div className="page-pad pt-4 space-y-6">
           {/* ─── 3. BỘ CHỌN 3 PHÂN KHÚC GIÁ (1TR - 2TR - 3TR) ─── */}
+          {/* ─── 3 HÀNG SUẤT OMAKASE (3 CARDS DỌC XẾP THEO HÀNG) ─── */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="font-display text-[17px] font-bold text-[var(--washi)]">
                   Lựa Chọn Suất Omakase
                 </h2>
                 <div className="text-[11.5px] text-[var(--muted)]">
-                  3 mức giá chuẩn Fine Dining với menu được chuẩn bị tỉ mỉ
+                  3 mức giá chuẩn Fine Dining với thực đơn chuẩn bị tỉ mỉ
                 </div>
               </div>
             </div>
 
-            {/* 3 Tabs chọn nhanh 1Tr - 2Tr - 3Tr */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-4">
               {sets.map((s) => {
                 const active = s.id === selectedSetId;
-                const isKaze = s.id === "kaze";
+                const setImg =
+                  s.id === "kaze"
+                    ? heroOmakase
+                    : s.id === "omakase-2m"
+                    ? heroWagyu
+                    : heroSushi;
+
+                const badgeText =
+                  s.id === "kaze"
+                    ? "VIP Nhất · Hoàng Gia"
+                    : s.id === "omakase-2m"
+                    ? "Được Chọn Nhiều Nhất"
+                    : "Khởi Đầu Tinh Hoa";
+
                 return (
-                  <button
+                  <div
                     key={s.id}
                     onClick={() => {
                       haptic("light");
                       setSelectedSetId(s.id);
                     }}
-                    className={`relative flex flex-col items-center rounded-2xl p-3 border transition-all text-center ${
+                    className={`relative overflow-hidden rounded-3xl border transition-all duration-300 cursor-pointer shadow-md ${
                       active
-                        ? "border-[var(--gold)] bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-3)] shadow-lg shadow-[var(--gold)]/10 scale-[1.02]"
-                        : "border-[var(--line)] bg-[var(--surface-2)] opacity-85 hover:opacity-100"
+                        ? "border-[var(--gold)] bg-gradient-to-b from-[var(--surface-2)] via-[var(--surface)] to-[var(--surface-2)] ring-1 ring-[var(--gold)]/40 shadow-xl shadow-[var(--gold)]/10"
+                        : "border-[var(--line)] bg-[var(--surface-2)] hover:border-white/25 opacity-90 hover:opacity-100"
                     }`}
                   >
-                    {isKaze && (
-                      <span className="absolute -top-2 rounded-full bg-gradient-to-r from-[var(--shu)] to-amber-600 px-2 py-0.2 text-[8.5px] font-bold text-white shadow-sm">
-                        VIP Nhất
-                      </span>
-                    )}
-                    <span className="jp text-[12px] font-bold text-[var(--gold)]">
-                      {s.jp}
-                    </span>
-                    <span className="mt-0.5 font-display text-[13.5px] font-bold text-[var(--washi)] truncate w-full">
-                      {s.name}
-                    </span>
-                    <span className="mt-1 text-[13px] font-extrabold text-[var(--shu)]">
-                      {s.price >= 1000000 ? `${s.price / 1000000}Tr` : vnd(s.price, lang)}
-                    </span>
-                    <span className="text-[10px] text-[var(--faint)] mt-0.5">
-                      {courseCount(s)} món
-                    </span>
-                  </button>
+                    {/* Ảnh đại diện set + Thông tin header của hàng */}
+                    <div className="relative h-[155px] w-full overflow-hidden select-none">
+                      <img
+                        src={setImg}
+                        alt={s.name}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+                      {/* Badge góc trên */}
+                      <div className="absolute top-3 inset-x-3 flex items-center justify-between">
+                        <span className="rounded-full bg-black/65 backdrop-blur-md px-2.5 py-0.5 text-[9.5px] font-bold text-white border border-white/20 shadow-sm">
+                          {badgeText}
+                        </span>
+
+                        {/* Trạng thái chọn */}
+                        <div
+                          className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold transition-all ${
+                            active
+                              ? "bg-[var(--gold)] text-black shadow-md"
+                              : "bg-black/50 text-white/70 border border-white/20"
+                          }`}
+                        >
+                          {active && <IconCheck size={12} />}
+                          <span>{active ? "Đang chọn" : "Chạm để chọn"}</span>
+                        </div>
+                      </div>
+
+                      {/* Tiêu đề dưới chân ảnh */}
+                      <div className="absolute inset-x-3 bottom-2.5 text-white">
+                        <div className="flex items-end justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="jp text-[11px] text-[var(--gold)] tracking-widest font-semibold">
+                              {s.jp} · Omakase Course
+                            </div>
+                            <h3 className="font-display text-[18px] font-bold leading-tight mt-0.5 text-white truncate">
+                              {s.name}
+                            </h3>
+                            <div className="text-[11.5px] text-zinc-300 italic truncate">
+                              {s.subtitle}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="font-display text-[20px] font-black text-[var(--gold)] leading-none">
+                              {vnd(s.price, lang)}
+                            </div>
+                            <div className="text-[9.5px] text-zinc-300 mt-0.5">
+                              {t.common.perGuest} · {courseCount(s)} món
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Phần nội dung chi tiết của hàng */}
+                    <div className="p-3.5 space-y-3">
+                      {/* Mô tả ngắn */}
+                      {s.description && (
+                        <p className="text-[12px] leading-relaxed text-[var(--muted)] line-clamp-2">
+                          {s.description}
+                        </p>
+                      )}
+
+                      {/* Danh sách các course nếu đang active */}
+                      {active ? (
+                        <div className="space-y-2 pt-1 border-t border-[var(--line)] animate-fade-in">
+                          <div className="flex items-center justify-between text-[11.5px] font-bold text-[var(--gold)] uppercase tracking-wider">
+                            <span>Trình Tự Thực Đơn ({courseCount(s)} Món)</span>
+                            <span className="text-[10.5px] text-[var(--faint)] lowercase font-normal">
+                              phục vụ tuần tự tại quầy
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-1.5">
+                            {s.courses.map((c, idx) => (
+                              <div
+                                key={idx}
+                                className="rounded-xl border border-[var(--line)] bg-[var(--surface-3)]/60 p-2.5"
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--gold)]/20 text-[9.5px] font-bold text-[var(--gold)]">
+                                    0{idx + 1}
+                                  </span>
+                                  <h4 className="font-display text-[12px] font-bold text-[var(--washi)]">
+                                    {c.section}
+                                  </h4>
+                                </div>
+
+                                <ul className="grid grid-cols-1 gap-0.5 text-[11.5px] text-[var(--muted)] pl-6">
+                                  {c.items.map((item, itemIdx) => (
+                                    <li key={itemIdx} className="flex items-center gap-1.5">
+                                      <span className="h-1 w-1 rounded-full bg-[var(--shu)] shrink-0" />
+                                      <span className="text-[var(--washi)] font-medium">
+                                        {item}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 flex items-center justify-between gap-2 border-t border-[var(--line)] text-[11.5px]">
+                            <span className="text-[var(--faint)]">
+                              Cọc trước 30% giữ chỗ (trừ vào hoá đơn)
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/omakase/${s.id}`);
+                              }}
+                              className="flex items-center gap-1 font-bold text-[var(--gold)] hover:underline shrink-0"
+                            >
+                              <span>Chi tiết set</span>
+                              <IconChevronRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Khi chưa active: Hiển thị tóm tắt món nổi bật và nút Xem chi tiết */
+                        <div className="pt-2 border-t border-[var(--line)] flex items-center justify-between text-[11.5px]">
+                          <div className="flex items-center gap-1.5 text-[var(--muted)] truncate max-w-[72%]">
+                            <span className="text-[var(--gold)] font-bold">Gồm:</span>
+                            <span className="truncate">
+                              {s.courses.map((c) => c.section.split("(")[0].trim()).join(" · ")}
+                            </span>
+                          </div>
+                          <span className="font-bold text-[var(--gold)] shrink-0 flex items-center gap-0.5">
+                            <span>Chọn xem menu</span>
+                            <IconChevronRight size={12} />
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
-
-          {/* ─── 4. CHI TIẾT SET ĐANG CHỌN (SHOW MÓN CỰC KỲ HẤP DẪN) ─── */}
-          {currentSet && (
-            <div className="rounded-3xl border border-[var(--gold)]/35 bg-gradient-to-b from-[var(--surface-2)] via-[var(--surface)] to-[var(--surface-2)] p-4 shadow-xl relative overflow-hidden">
-              {/* Thẻ ảnh và tên set */}
-              <div className="relative h-[180px] w-full rounded-2xl overflow-hidden mb-4 shadow-md">
-                <img
-                  src={
-                    currentSet.id === "kaze"
-                      ? heroOmakase
-                      : currentSet.id === "omakase-2m"
-                      ? heroWagyu
-                      : heroSushi
-                  }
-                  alt={currentSet.name}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                <div className="absolute inset-x-3 bottom-3 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="jp text-[12px] text-[var(--gold)] tracking-widest font-semibold">
-                        {currentSet.jp} · Omakase Course
-                      </div>
-                      <h3 className="font-display text-[20px] font-bold leading-tight mt-0.5">
-                        {currentSet.name}
-                      </h3>
-                      <div className="text-[12px] text-zinc-300 italic">
-                        {currentSet.subtitle}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-display text-[22px] font-black text-[var(--gold)]">
-                        {vnd(currentSet.price, lang)}
-                      </div>
-                      <div className="text-[10px] text-zinc-300">
-                        {t.common.perGuest}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mô tả set */}
-              {currentSet.description && (
-                <p className="text-[12.5px] leading-relaxed text-[var(--muted)] border-b border-[var(--line)] pb-3.5 mb-3.5">
-                  {currentSet.description}
-                </p>
-              )}
-
-              {/* Danh sách các course món ăn thực tế */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-[12px] font-bold text-[var(--gold)] uppercase tracking-wider">
-                  <span>Trình Tự Thực Đơn ({courseCount(currentSet)} Món)</span>
-                  <span className="text-[11px] text-[var(--faint)] lowercase font-normal">
-                    phục vụ lần lượt tại quầy
-                  </span>
-                </div>
-
-                <div className="space-y-2.5">
-                  {currentSet.courses.map((course, idx) => (
-                    <div
-                      key={idx}
-                      className="rounded-xl border border-[var(--line)] bg-[var(--surface-3)]/60 p-3"
-                    >
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--gold)]/20 text-[10px] font-bold text-[var(--gold)]">
-                          {idx + 1}
-                        </span>
-                        <h4 className="font-display text-[13px] font-bold text-[var(--washi)]">
-                          {course.section}
-                        </h4>
-                      </div>
-
-                      <ul className="grid grid-cols-1 gap-1 text-[12px] text-[var(--muted)] pl-7">
-                        {course.items.map((item, itemIdx) => (
-                          <li key={itemIdx} className="flex items-center gap-1.5">
-                            <span className="h-1 w-1 rounded-full bg-[var(--shu)] shrink-0" />
-                            <span className="text-[var(--washi)] font-medium">
-                              {item}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Nút xem chi tiết set */}
-              <div className="mt-4 pt-3 border-t border-[var(--line)] flex items-center justify-between text-[12px]">
-                <span className="text-[var(--faint)]">
-                  Cọc trước 30% giữ ghế (trừ vào hoá đơn)
-                </span>
-                <button
-                  onClick={() => navigate(`/omakase/${currentSet.id}`)}
-                  className="flex items-center gap-1 font-bold text-[var(--gold)] hover:underline"
-                >
-                  <span>Xem chi tiết set</span>
-                  <IconChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* ─── 5. PINTEREST GALLERY: KHÔNG GIAN OMAKASE & MÓN ĂN TUYỆT TÁC ─── */}
           <div>

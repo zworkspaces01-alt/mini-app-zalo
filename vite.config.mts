@@ -10,6 +10,14 @@ export default () => {
     envDir: "../",
     base: "",
     plugins: [zaloMiniApp(), react()],
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        process.env.VITE_SUPABASE_URL || "https://huznckfqlywnhaexcelj.supabase.co"
+      ),
+      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(
+        process.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_Ibyx9lBKWxfsT2cxKghTBw_0-R1ch82"
+      ),
+    },
     build: {
       assetsInlineLimit: 0,
     },

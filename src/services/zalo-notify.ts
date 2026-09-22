@@ -2,8 +2,12 @@
  * Gửi tin nhắn xác nhận Zalo OA / ZNS cho khách hàng qua Supabase Edge Function.
  */
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const url =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://huznckfqlywnhaexcelj.supabase.co";
+const anonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "sb_publishable_Ibyx9lBKWxfsT2cxKghTBw_0-R1ch82";
 
 export interface ZaloNotifyPayload {
   type: "reservation" | "order" | "test";

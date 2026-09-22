@@ -143,7 +143,8 @@ export default function BookingPage() {
         // Ca nhà hàng đóng cửa hôm đó trả về rỗng — không hiện mục trống.
         setGroups(gs.filter((g) => g.rows.length > 0));
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Lỗi tải khung giờ:", err);
         if (!alive) return;
         setGroups([]);
         setSlotError(t.booking.slotsFailed);
